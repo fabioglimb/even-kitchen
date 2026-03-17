@@ -1,6 +1,8 @@
 import type { DisplayData, GlassNavState } from 'even-glass/types';
 import { line } from 'even-glass/types';
 import { renderTimerLines } from 'even-glass/timer-display';
+import { buildActionBar, buildStaticActionBar } from 'even-glass/action-bar';
+import { truncate, buildHeaderLine, applyScrollIndicators, SCROLL_UP } from 'even-glass/text-utils';
 import type { Recipe } from '../types/recipe';
 import type { TimerState } from '../contexts/CookingContext';
 
@@ -10,10 +12,6 @@ export interface KitchenSnapshot {
   currentStepIndex: number;
   timers: Record<number, TimerState>;
   flashPhase: boolean;
-}
-
-function truncate(text: string, maxLen: number): string {
-  return text.length > maxLen ? text.slice(0, maxLen - 1) + '~' : text;
 }
 
 export function findRecipe(snapshot: KitchenSnapshot): Recipe | null {
@@ -61,36 +59,35 @@ function recipeDetailLines(recipe: Recipe): string[] {
   return items;
 }
 
+/** Number of scrollable content lines (excluding title which is in the header) */
 export function recipeDetailLineCount(recipe: Recipe): number {
-  return recipeDetailLines(recipe).length;
+  return recipeDetailLines(recipe).length - 1;
 }
 
 function recipeDetailDisplay(recipe: Recipe, nav: GlassNavState): DisplayData {
   const all = recipeDetailLines(recipe);
-  const maxVisible = 8;
-  const scrollPos = nav.highlightedIndex;
-  const start = Math.max(0, Math.min(scrollPos, all.length - maxVisible));
-  const visible = all.slice(start, start + maxVisible);
+  // Content = everything after the title (index 0), since title is in the header
+  const content = all.slice(1);
+  const contentSlots = 6;
 
-  // Top row: recipe title + Start Cooking button
-  const headerLine = `${recipe.title}  \u25B6Start Cooking\u25C0`;
+  // Fixed header
+  const headerLine = buildHeaderLine(recipe.title, buildStaticActionBar(['Start Cooking'], 0));
   const lines = [line(headerLine, 'normal', false)];
   lines.push(line('', 'normal', false));
 
-  // Content starts from index 1 (skip title since it's in header)
-  const contentStart = start === 0 ? 1 : start;
-  const contentVisible = all.slice(contentStart, contentStart + maxVisible - 2);
+  // Window the content
+  const scrollPos = nav.highlightedIndex;
+  const start = Math.max(0, Math.min(scrollPos, content.length - contentSlots));
+  const visible = content.slice(start, start + contentSlots);
 
-  for (const text of contentVisible) {
+  for (const text of visible) {
     lines.push(line(text, 'meta', false));
   }
 
-  if (contentStart > 1 && lines.length > 2) {
-    lines[2] = line('\u25B2', 'meta', false);
-  }
-  if (contentStart + maxVisible - 2 < all.length && lines.length > 2) {
-    lines[lines.length - 1] = line('\u25BC', 'meta', false);
-  }
+  // Scroll indicators on content area
+  const contentLines = lines.slice(2);
+  applyScrollIndicators(contentLines, start, content.length, contentSlots, (t) => line(t, 'meta', false));
+  lines.splice(2, contentLines.length, ...contentLines);
 
   return { lines };
 }
@@ -154,22 +151,6 @@ export function cookingContentLineCount(recipe: Recipe, stepIndex: number, timer
   return buildStepContent(recipe, stepIndex, timers).length;
 }
 
-function buildActionBar(buttons: string[], btnIdx: number, activeMode: 'buttons' | 'scroll' | 'steps', flash: boolean): string {
-  const activeName = activeMode === 'scroll' ? 'Scroll' : activeMode === 'steps' ? 'Steps' : '';
-  const activeBtnIdx = buttons.indexOf(activeName);
-
-  return buttons.map((name, i) => {
-    if (activeBtnIdx === i) {
-      const L = flash ? '\u25B6' : '\u25B7';
-      const R = flash ? '\u25C0' : '\u25C1';
-      return `${L}${name}${R}`;
-    }
-    if (activeMode === 'buttons' && i === btnIdx) {
-      return `\u25B6${name}\u25C0`;
-    }
-    return ` ${name} `;
-  }).join(' ');
-}
 
 function cookingDisplay(recipe: Recipe, stepIndex: number, timers: Record<number, TimerState>, nav: GlassNavState, flash: boolean): DisplayData {
   const mode = cookingMode(nav.highlightedIndex);
@@ -181,8 +162,9 @@ function cookingDisplay(recipe: Recipe, stepIndex: number, timers: Record<number
 
   // Top bar: step info + action buttons
   const stepLabel = `Step ${stepIndex + 1}/${recipe.steps.length}: ${step?.title ?? ''}`;
-  const actionBar = buildActionBar(buttons, btnIdx, mode, flash);
-  const headerLine = `${stepLabel}  ${actionBar}`;
+  const activeLabel = mode === 'scroll' ? 'Scroll' : mode === 'steps' ? 'Steps' : null;
+  const actionBar = buildActionBar(buttons, btnIdx, activeLabel, flash);
+  const headerLine = buildHeaderLine(stepLabel, actionBar);
 
   // Build content (timer + instructions)
   const content = buildStepContent(recipe, stepIndex, timers);
@@ -211,8 +193,12 @@ function cookingDisplay(recipe: Recipe, stepIndex: number, timers: Record<number
     if (instrPart.length > 0) {
       const start = Math.max(0, Math.min(offset, instrPart.length - 1));
       const visible = instrPart.slice(start);
-      if (start > 0) lines.push(line('\u25B2', 'meta', false));
       for (const t of visible) lines.push(line(t, 'meta', false));
+      // Apply scroll up indicator to first instruction line
+      const instrStartIdx = lines.length - visible.length;
+      if (start > 0 && instrStartIdx < lines.length) {
+        lines[instrStartIdx] = line(SCROLL_UP, 'meta', false);
+      }
     }
     return { lines };
   }
@@ -229,12 +215,7 @@ function cookingDisplay(recipe: Recipe, stepIndex: number, timers: Record<number
 
 function completeDisplay(recipe: Recipe, nav: GlassNavState): DisplayData {
   const btnIdx = Math.min(nav.highlightedIndex, 1);
-  const btns = ['Recipes', 'Cook Again'];
-  const bar = btns.map((name, i) =>
-    i === btnIdx ? `\u25B6${name}\u25C0` : ` ${name} `
-  ).join(' ');
-
-  const headerLine = `${recipe.title}  ${bar}`;
+  const headerLine = buildHeaderLine(recipe.title, buildStaticActionBar(['Recipes', 'Cook Again'], btnIdx));
 
   return {
     lines: [

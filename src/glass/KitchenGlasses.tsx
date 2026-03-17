@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useGlasses } from 'even-glass/useGlasses';
+import { useFlashPhase } from 'even-glass/useFlashPhase';
 import { useRecipeContext } from '../contexts/RecipeContext';
 import { useCookingContext } from '../contexts/CookingContext';
 import { toDisplayData, type KitchenSnapshot } from './selectors';
@@ -24,7 +25,8 @@ export function KitchenGlasses() {
   const { currentStepIndex, setCurrentStepIndex, timers, getTimer, setStepTimer, resetAllTimers } = useCookingContext();
   const navigate = useNavigate();
   const location = useLocation();
-  const [flashPhase, setFlashPhase] = useState(false);
+  const isCooking = deriveScreen(location.pathname) === 'cooking';
+  const flashPhase = useFlashPhase(isCooking);
 
   const currentRecipeId = extractRecipeId(location.pathname);
 
@@ -42,19 +44,6 @@ export function KitchenGlasses() {
   snapshotRef.current = snapshot;
 
   const getSnapshot = useCallback(() => snapshotRef.current!, [snapshotRef]);
-
-  // Flash timer for blinking active mode indicator (500ms toggle)
-  // Runs whenever on cooking screen — cheap, only used when mode is active
-  useEffect(() => {
-    const screen = deriveScreen(location.pathname);
-    if (screen !== 'cooking') return;
-
-    const interval = setInterval(() => {
-      setFlashPhase((prev) => !prev);
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, [location.pathname]);
 
   // Keep refs for callbacks
   const recipesRef = useRef(recipes);
