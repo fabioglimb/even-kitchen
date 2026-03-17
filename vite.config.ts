@@ -8,7 +8,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "even-glass": path.resolve(__dirname, "../even-glass"),
+      "even-glass": path.resolve(__dirname, "./src/lib/even-glass"),
     },
     dedupe: ["react", "react-dom", "react-router", "@evenrealities/even_hub_sdk", "@jappyjan/even-better-sdk"],
   },

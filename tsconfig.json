@@ -17,7 +17,7 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./src/*"],
-      "even-glass/*": ["../even-glass/*"],
+      "even-glass/*": ["./src/lib/even-glass/*"],
       "@evenrealities/even_hub_sdk": ["./node_modules/@evenrealities/even_hub_sdk"],
       "@jappyjan/even-better-sdk": ["./node_modules/@jappyjan/even-better-sdk"],
       "react": ["./node_modules/@types/react"],
@@ -25,5 +25,5 @@
     },
     "baseUrl": "."
   },
-  "include": ["src", "../even-glass"]
+  "include": ["src"]
 }
