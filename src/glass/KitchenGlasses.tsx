@@ -21,7 +21,9 @@ function extractRecipeId(path: string): string | null {
   return match ? match[1] : null;
 }
 
-const homeTiles = kitchenSplash.getTiles();
+// Only use the first tile (logo) for home — padding tiles would create extra containers
+const allTiles = kitchenSplash.getTiles();
+const homeTiles = allTiles.length > 0 ? [allTiles[0]!] : [];
 
 export function KitchenGlasses() {
   const { recipes, settings } = useRecipeContext();

@@ -37,7 +37,7 @@ function recipeListDisplay(snapshot: KitchenSnapshot, nav: GlassNavState): Displ
   const visible = active.slice(start, start + maxVisible);
 
   const lines: DisplayData['lines'] = visible.map((r, i) =>
-    line(truncate(r.title, 40), 'normal', (start + i) === hi)
+    line(truncate(r.title, 54), 'normal', (start + i) === hi)
   );
 
   // Replace first/last lines with ▲/▼ when there's more content
@@ -62,13 +62,15 @@ function recipeDetailLines(recipe: Recipe, lang: AppLanguage): string[] {
   items.push('');
   items.push(t('recipe.ingredients', lang).toUpperCase());
   recipe.ingredients.forEach((ing) => {
-    items.push(truncate(`${ing.amount} ${ing.unit} ${ing.name}`, 40));
+    items.push(truncate(`${ing.amount} ${ing.unit} ${ing.name}`, 54));
   });
   items.push('');
   items.push(t('recipe.steps', lang).toUpperCase());
   recipe.steps.forEach((step, i) => {
     const timer = step.timerSeconds ? ` (${Math.ceil(step.timerSeconds / 60)}min)` : '';
-    items.push(truncate(`${i + 1}. ${step.title}${timer}`, 40));
+    const stepText = `${i + 1}. ${step.title}${timer}`;
+    const wrapped = wordWrap(stepText, 54);
+    for (const wl of wrapped) items.push(wl);
   });
   return items;
 }
@@ -175,7 +177,7 @@ function buildStepContent(recipe: Recipe, stepIndex: number, timers: Record<numb
   }
 
   if (step?.instructions) {
-    const wrapped = wordWrap(step.instructions, 42);
+    const wrapped = wordWrap(step.instructions, 54);
     for (const wl of wrapped) items.push(wl);
   }
 
@@ -204,7 +206,7 @@ function cookingDisplay(recipe: Recipe, stepIndex: number, timers: Record<number
   const btnIdx = cookingButtonIndex(nav.highlightedIndex, buttons.length);
 
   // Top bar: step info + action buttons
-  const stepLabel = `${t('cooking.step', lang)} ${stepIndex + 1}/${recipe.steps.length}: ${step?.title ?? ''}`;
+  const stepLabel = `${t('cooking.step', lang)} ${stepIndex + 1}/${recipe.steps.length}: ${truncate(step?.title ?? '', 20)}`;
   const activeLabel = mode === 'scroll' ? t('glass.scroll', lang) : mode === 'steps' ? t('glass.steps', lang) : null;
   const actionBar = buildActionBar(buttons, btnIdx, activeLabel, flash);
   const headerLine = buildHeaderLine(stepLabel, actionBar);
