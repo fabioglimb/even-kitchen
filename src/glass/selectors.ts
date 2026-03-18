@@ -1,8 +1,8 @@
-import type { DisplayData, GlassNavState } from 'even-glass/types';
-import { line } from 'even-glass/types';
-import { renderTimerLines } from 'even-glass/timer-display';
-import { buildActionBar, buildStaticActionBar } from 'even-glass/action-bar';
-import { truncate, buildHeaderLine, applyScrollIndicators, SCROLL_UP } from 'even-glass/text-utils';
+import type { DisplayData, GlassNavState } from 'even-toolkit/types';
+import { line } from 'even-toolkit/types';
+import { renderTimerLines } from 'even-toolkit/timer-display';
+import { buildActionBar, buildStaticActionBar } from 'even-toolkit/action-bar';
+import { truncate, buildHeaderLine, applyScrollIndicators, SCROLL_UP } from 'even-toolkit/text-utils';
 import type { Recipe } from '../types/recipe';
 import type { TimerState } from '../contexts/CookingContext';
 
@@ -27,19 +27,31 @@ export function glassRecipes(snapshot: KitchenSnapshot): Recipe[] {
 
 function recipeListDisplay(snapshot: KitchenSnapshot, nav: GlassNavState): DisplayData {
   const active = glassRecipes(snapshot);
-  const lines = [
-    line('EVENKITCHEN', 'normal'),
-    line('', 'normal'),
-  ];
-  active.forEach((r, i) => {
-    lines.push(line(truncate(r.title, 40), 'normal', i === nav.highlightedIndex));
-  });
+  const maxVisible = 6; // fits below home image tile (168px / ~26px per line)
+  const hi = nav.highlightedIndex;
+
+  // Sliding window centered on highlighted item (not start=hi, which puts it at position 0 where ▲ replaces it)
+  const start = Math.max(0, Math.min(hi - Math.floor(maxVisible / 2), active.length - maxVisible));
+  const visible = active.slice(start, start + maxVisible);
+
+  const lines: DisplayData['lines'] = visible.map((r, i) =>
+    line(truncate(r.title, 40), 'normal', (start + i) === hi)
+  );
+
+  // Replace first/last lines with ▲/▼ when there's more content
+  applyScrollIndicators(lines, start, active.length, maxVisible, (t) => line(t, 'meta', false));
+
   return { lines };
 }
 
 // ── Recipe Detail ──
 // Scrollable content + [Start Cooking] action button always visible at bottom
 // highlightedIndex: 0..N = scroll position, click always starts cooking
+
+/** Max total lines on G2 display (raw bridge with paddingLength 6) */
+const G2_TEXT_LINES = 10;
+/** Max content lines in recipe detail */
+const DETAIL_CONTENT_SLOTS = G2_TEXT_LINES - 2; // 8
 
 function recipeDetailLines(recipe: Recipe): string[] {
   const items: string[] = [];
@@ -59,16 +71,17 @@ function recipeDetailLines(recipe: Recipe): string[] {
   return items;
 }
 
-/** Number of scrollable content lines (excluding title which is in the header) */
+/** Max scroll position for recipe detail (content lines that overflow the visible area) */
 export function recipeDetailLineCount(recipe: Recipe): number {
-  return recipeDetailLines(recipe).length - 1;
+  const contentLength = recipeDetailLines(recipe).length - 1; // exclude title
+  return Math.max(0, contentLength - DETAIL_CONTENT_SLOTS);
 }
 
 function recipeDetailDisplay(recipe: Recipe, nav: GlassNavState): DisplayData {
   const all = recipeDetailLines(recipe);
   // Content = everything after the title (index 0), since title is in the header
   const content = all.slice(1);
-  const contentSlots = 6;
+  const contentSlots = DETAIL_CONTENT_SLOTS;
 
   // Fixed header
   const headerLine = buildHeaderLine(recipe.title, buildStaticActionBar(['Start Cooking'], 0));
@@ -129,6 +142,25 @@ function getStepTimer(step: Recipe['steps'][0], timers: Record<number, TimerStat
   return { running: false, remaining: dur, total: dur };
 }
 
+/** Word-wrap text to fit within a character width. */
+function wordWrap(text: string, maxChars: number): string[] {
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let current = '';
+  for (const word of words) {
+    if (current.length === 0) {
+      current = word;
+    } else if (current.length + 1 + word.length <= maxChars) {
+      current += ' ' + word;
+    } else {
+      lines.push(current);
+      current = word;
+    }
+  }
+  if (current.length > 0) lines.push(current);
+  return lines;
+}
+
 function buildStepContent(recipe: Recipe, stepIndex: number, timers: Record<number, TimerState>): string[] {
   const step = recipe.steps[stepIndex];
   const items: string[] = [];
@@ -141,14 +173,23 @@ function buildStepContent(recipe: Recipe, stepIndex: number, timers: Record<numb
   }
 
   if (step?.instructions) {
-    items.push(step.instructions);
+    const wrapped = wordWrap(step.instructions, 42);
+    for (const wl of wrapped) items.push(wl);
   }
 
   return items;
 }
 
 export function cookingContentLineCount(recipe: Recipe, stepIndex: number, timers: Record<number, TimerState>): number {
-  return buildStepContent(recipe, stepIndex, timers).length;
+  const step = recipe.steps[stepIndex];
+  const content = buildStepContent(recipe, stepIndex, timers);
+  const timerLineCount = step?.timerSeconds
+    ? renderTimerLines(getStepTimer(step, timers, stepIndex)).length + 1
+    : 0;
+  const instrCount = content.length - timerLineCount;
+  // Available slots for instructions (reduced by overhead for word-wrapped lines)
+  const instrSlots = G2_TEXT_LINES - 2 - timerLineCount;
+  return Math.max(0, instrCount - instrSlots);
 }
 
 
@@ -170,15 +211,12 @@ function cookingDisplay(recipe: Recipe, stepIndex: number, timers: Record<number
   const content = buildStepContent(recipe, stepIndex, timers);
 
   // Split content into timer lines and instruction lines
-  const instructionText = step?.instructions ?? '';
-  const timerPart: string[] = [];
-  const instrPart: string[] = [];
-  let hitInstr = false;
-  for (const t of content) {
-    if (t === instructionText) { hitInstr = true; instrPart.push(t); }
-    else if (hitInstr) { instrPart.push(t); }
-    else { timerPart.push(t); }
-  }
+  // Timer lines come first (timer display + blank separator), then instruction lines
+  const timerLineCount = step?.timerSeconds
+    ? renderTimerLines(getStepTimer(step, timers, stepIndex)).length + 1 // +1 for blank separator
+    : 0;
+  const timerPart = content.slice(0, timerLineCount);
+  const instrPart = content.slice(timerLineCount);
 
   // Always: header + blank + timer (fixed)
   const lines = [line(headerLine, 'normal', false)];
@@ -187,25 +225,15 @@ function cookingDisplay(recipe: Recipe, stepIndex: number, timers: Record<number
     lines.push(line(t, 'meta', false));
   }
 
-  if (mode === 'scroll') {
-    // Scroll mode: instructions scroll
-    const offset = cookingScrollOffset(nav.highlightedIndex);
-    if (instrPart.length > 0) {
-      const start = Math.max(0, Math.min(offset, instrPart.length - 1));
-      const visible = instrPart.slice(start);
-      for (const t of visible) lines.push(line(t, 'meta', false));
-      // Apply scroll up indicator to first instruction line
-      const instrStartIdx = lines.length - visible.length;
-      if (start > 0 && instrStartIdx < lines.length) {
-        lines[instrStartIdx] = line(SCROLL_UP, 'meta', false);
-      }
-    }
-    return { lines };
-  }
-
-  // Button select / steps mode: show full instructions
-  for (const t of instrPart) {
-    lines.push(line(t, 'meta', false));
+  // Window instructions to fit available display space (all modes)
+  const instrSlots = G2_TEXT_LINES - lines.length;
+  const offset = mode === 'scroll' ? cookingScrollOffset(nav.highlightedIndex) : 0;
+  if (instrPart.length > 0 && instrSlots > 0) {
+    const start = Math.max(0, Math.min(offset, instrPart.length - instrSlots));
+    const visible = instrPart.slice(start, start + instrSlots);
+    const instrLines = visible.map((t) => line(t, 'meta', false));
+    applyScrollIndicators(instrLines, start, instrPart.length, instrSlots, (t) => line(t, 'meta', false));
+    for (const il of instrLines) lines.push(il);
   }
   return { lines };
 }

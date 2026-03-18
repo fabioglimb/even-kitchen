@@ -1,4 +1,4 @@
-import type { GlassAction, GlassNavState } from 'even-glass/types';
+import type { GlassAction, GlassNavState } from 'even-toolkit/types';
 import type { KitchenSnapshot } from './selectors';
 import {
   findRecipe,
@@ -49,7 +49,7 @@ export function createActionHandler(navigate: Navigate, actions: KitchenActions)
       case 'recipe-detail': {
         const recipe = findRecipe(snapshot);
         if (!recipe) return nav;
-        const maxScroll = Math.max(0, recipeDetailLineCount(recipe) - 1);
+        const maxScroll = recipeDetailLineCount(recipe);
 
         if (action.type === 'HIGHLIGHT_MOVE') {
           const delta = action.direction === 'up' ? -1 : 1;
@@ -118,7 +118,7 @@ export function createActionHandler(navigate: Navigate, actions: KitchenActions)
         if (mode === 'scroll') {
           if (action.type === 'HIGHLIGHT_MOVE') {
             const offset = cookingScrollOffset(nav.highlightedIndex);
-            const maxOffset = Math.max(0, cookingContentLineCount(recipe, snapshot.currentStepIndex, snapshot.timers) - 1);
+            const maxOffset = cookingContentLineCount(recipe, snapshot.currentStepIndex, snapshot.timers);
             const delta = action.direction === 'up' ? -1 : 1;
             const next = Math.max(0, Math.min(maxOffset, offset + delta));
             return { ...nav, highlightedIndex: COOK_MODE_SCROLL + next };

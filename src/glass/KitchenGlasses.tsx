@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router';
-import { useGlasses } from 'even-glass/useGlasses';
-import { useFlashPhase } from 'even-glass/useFlashPhase';
+import { useGlasses } from 'even-toolkit/useGlasses';
+import { useFlashPhase } from 'even-toolkit/useFlashPhase';
 import { useRecipeContext } from '../contexts/RecipeContext';
+import { kitchenSplash } from './splash';
 import { useCookingContext } from '../contexts/CookingContext';
 import { toDisplayData, type KitchenSnapshot } from './selectors';
 import { createActionHandler } from './actions';
@@ -19,6 +20,8 @@ function extractRecipeId(path: string): string | null {
   const match = path.match(/^\/recipe\/([^/]+)/);
   return match ? match[1] : null;
 }
+
+const homeTiles = kitchenSplash.getTiles();
 
 export function KitchenGlasses() {
   const { recipes } = useRecipeContext();
@@ -84,7 +87,10 @@ export function KitchenGlasses() {
     toDisplayData,
     onGlassAction,
     deriveScreen,
-    appName: 'even-kitchen',
+    appName: 'EVENKITCHEN',
+    splash: kitchenSplash,
+    getPageMode: (screen) => screen === 'recipe-list' ? 'home' : 'text',
+    homeImageTiles: homeTiles,
   });
 
   return null;

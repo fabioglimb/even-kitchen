@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head><title>Generate Hero</title></head>
+<body style="background:#000; display:flex; justify-content:center; align-items:center; min-height:100vh;">
+<canvas id="c" width="800" height="400"></canvas>
+<script>
+const ctx = document.getElementById('c').getContext('2d');
+const w = 800, h = 400;
+ctx.fillStyle = '#000';
+ctx.fillRect(0, 0, w, h);
+
+const fg = '#e0e0e0';
+const dim = '#808080';
+const cx = w / 2;
+const cy = h / 2;
+const s = Math.min(w / 200, h / 100);
+
+// Steam
+ctx.strokeStyle = dim;
+ctx.lineWidth = 1.5 * s;
+ctx.lineCap = 'round';
+for (const dx of [-18, -4, 10]) {
+  const sx = cx + dx * s;
+  const baseY = cy - 18 * s;
+  ctx.beginPath();
+  ctx.moveTo(sx, baseY);
+  ctx.bezierCurveTo(sx - 4*s, baseY - 8*s, sx + 4*s, baseY - 14*s, sx, baseY - 22*s);
+  ctx.stroke();
+}
+
+// Pot
+const potW = 60 * s;
+const potLeft = cx - potW / 2;
+const potRight = cx + potW / 2;
+const rimY = cy - 15 * s;
+
+ctx.fillStyle = fg;
+ctx.fillRect(potLeft - 5*s, rimY, potW + 10*s, 4*s);
+
+ctx.beginPath();
+ctx.moveTo(potLeft, rimY + 4*s);
+ctx.lineTo(potLeft + 4*s, rimY + 29*s);
+ctx.lineTo(potRight - 4*s, rimY + 29*s);
+ctx.lineTo(potRight, rimY + 4*s);
+ctx.closePath();
+ctx.fillStyle = '#404040';
+ctx.fill();
+ctx.strokeStyle = fg;
+ctx.lineWidth = 2*s;
+ctx.stroke();
+
+ctx.fillStyle = fg;
+ctx.fillRect(potLeft + 4*s, rimY + 27*s, potW - 8*s, 3*s);
+
+ctx.strokeStyle = fg;
+ctx.lineWidth = 2.5*s;
+for (const side of [-1, 1]) {
+  const hx = side === -1 ? potLeft - 5*s : potRight + 5*s;
+  const hxo = hx + side * 9*s;
+  ctx.beginPath();
+  ctx.moveTo(hx, rimY + 2*s);
+  ctx.lineTo(hxo, rimY + 2*s);
+  ctx.lineTo(hxo, rimY + 10*s);
+  ctx.lineTo(hx, rimY + 10*s);
+  ctx.stroke();
+}
+
+ctx.fillStyle = fg;
+ctx.beginPath();
+ctx.arc(cx, rimY - 3*s, 3*s, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = fg;
+ctx.font = `bold ${12*s}px "Courier New", monospace`;
+ctx.textAlign = 'center';
+ctx.fillText('EVENKITCHEN', cx, cy + 28*s);
+
+ctx.fillStyle = dim;
+ctx.font = `${9*s}px "Courier New", monospace`;
+ctx.fillText('Loading...', cx, cy + 42*s);
+
+// Right-click canvas to save as PNG
+</script>
+</body>
+</html>
