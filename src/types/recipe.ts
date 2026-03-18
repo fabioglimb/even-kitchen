@@ -62,7 +62,7 @@ export const AI_PROVIDERS: AIProviderConfig[] = [
   },
 ]
 
-export type AppLanguage = 'en' | 'it' | 'es' | 'fr' | 'de' | 'pt' | 'ja' | 'zh' | 'ko'
+export type AppLanguage = 'en' | 'it' | 'es' | 'fr' | 'de' | 'pt' | 'ja' | 'zh' | 'ko' | 'ru'
 
 export const APP_LANGUAGES: { id: AppLanguage; name: string }[] = [
   { id: 'en', name: 'English' },
@@ -74,6 +74,7 @@ export const APP_LANGUAGES: { id: AppLanguage; name: string }[] = [
   { id: 'ja', name: 'Japanese' },
   { id: 'zh', name: 'Chinese' },
   { id: 'ko', name: 'Korean' },
+  { id: 'ru', name: 'Русский' },
 ]
 
 export interface AppSettings {

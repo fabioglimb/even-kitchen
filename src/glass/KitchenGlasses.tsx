@@ -24,7 +24,7 @@ function extractRecipeId(path: string): string | null {
 const homeTiles = kitchenSplash.getTiles();
 
 export function KitchenGlasses() {
-  const { recipes } = useRecipeContext();
+  const { recipes, settings } = useRecipeContext();
   const { currentStepIndex, setCurrentStepIndex, timers, getTimer, setStepTimer, resetAllTimers } = useCookingContext();
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,6 +43,7 @@ export function KitchenGlasses() {
     currentStepIndex,
     timers,
     flashPhase,
+    language: settings.language,
   };
   snapshotRef.current = snapshot;
 

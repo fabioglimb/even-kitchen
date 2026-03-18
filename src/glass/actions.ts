@@ -12,6 +12,7 @@ import {
   COOK_MODE_SCROLL,
   COOK_MODE_STEPS,
 } from './selectors';
+import { t } from '../utils/i18n';
 
 type Navigate = (path: string) => void;
 
@@ -49,7 +50,7 @@ export function createActionHandler(navigate: Navigate, actions: KitchenActions)
       case 'recipe-detail': {
         const recipe = findRecipe(snapshot);
         if (!recipe) return nav;
-        const maxScroll = recipeDetailLineCount(recipe);
+        const maxScroll = recipeDetailLineCount(recipe, snapshot.language);
 
         if (action.type === 'HIGHLIGHT_MOVE') {
           const delta = action.direction === 'up' ? -1 : 1;
@@ -78,7 +79,8 @@ export function createActionHandler(navigate: Navigate, actions: KitchenActions)
         const step = recipe.steps[snapshot.currentStepIndex];
         const hasTimer = Boolean(step?.timerSeconds);
         const isLastStep = snapshot.currentStepIndex >= recipe.steps.length - 1;
-        const buttons = getCookingButtons(hasTimer, isLastStep);
+        const lang = snapshot.language;
+        const buttons = getCookingButtons(hasTimer, isLastStep, lang);
 
         // ── Button select mode ──
         if (mode === 'buttons') {
@@ -91,17 +93,17 @@ export function createActionHandler(navigate: Navigate, actions: KitchenActions)
           if (action.type === 'SELECT_HIGHLIGHTED') {
             const btnIdx = cookingButtonIndex(nav.highlightedIndex, buttons.length);
             const selected = buttons[btnIdx];
-            if (selected === 'Timer') {
+            if (selected === t('glass.timer', lang)) {
               actions.toggleTimer();
               return nav;
             }
-            if (selected === 'Scroll') {
+            if (selected === t('glass.scroll', lang)) {
               return { ...nav, highlightedIndex: COOK_MODE_SCROLL };
             }
-            if (selected === 'Steps') {
+            if (selected === t('glass.steps', lang)) {
               return { ...nav, highlightedIndex: COOK_MODE_STEPS };
             }
-            if (selected === 'Finish') {
+            if (selected === t('glass.finish', lang)) {
               navigate(`/recipe/${recipe.id}/complete`);
               return nav;
             }
@@ -124,7 +126,7 @@ export function createActionHandler(navigate: Navigate, actions: KitchenActions)
             return { ...nav, highlightedIndex: COOK_MODE_SCROLL + next };
           }
           if (action.type === 'SELECT_HIGHLIGHTED' || action.type === 'GO_BACK') {
-            const scrollIdx = buttons.indexOf('Scroll');
+            const scrollIdx = buttons.indexOf(t('glass.scroll', lang));
             return { ...nav, highlightedIndex: scrollIdx >= 0 ? scrollIdx : 0 };
           }
           return nav;
@@ -140,7 +142,7 @@ export function createActionHandler(navigate: Navigate, actions: KitchenActions)
             return nav;
           }
           if (action.type === 'SELECT_HIGHLIGHTED' || action.type === 'GO_BACK') {
-            const stepsIdx = buttons.indexOf('Steps');
+            const stepsIdx = buttons.indexOf(t('glass.steps', lang));
             return { ...nav, highlightedIndex: stepsIdx >= 0 ? stepsIdx : 0 };
           }
           return nav;

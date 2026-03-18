@@ -3,8 +3,9 @@ import { line } from 'even-toolkit/types';
 import { renderTimerLines } from 'even-toolkit/timer-display';
 import { buildActionBar, buildStaticActionBar } from 'even-toolkit/action-bar';
 import { truncate, buildHeaderLine, applyScrollIndicators, SCROLL_UP } from 'even-toolkit/text-utils';
-import type { Recipe } from '../types/recipe';
+import type { Recipe, AppLanguage } from '../types/recipe';
 import type { TimerState } from '../contexts/CookingContext';
+import { t } from '../utils/i18n';
 
 export interface KitchenSnapshot {
   recipes: Recipe[];
@@ -12,6 +13,7 @@ export interface KitchenSnapshot {
   currentStepIndex: number;
   timers: Record<number, TimerState>;
   flashPhase: boolean;
+  language: AppLanguage;
 }
 
 export function findRecipe(snapshot: KitchenSnapshot): Recipe | null {
@@ -53,17 +55,17 @@ const G2_TEXT_LINES = 10;
 /** Max content lines in recipe detail */
 const DETAIL_CONTENT_SLOTS = G2_TEXT_LINES - 2; // 8
 
-function recipeDetailLines(recipe: Recipe): string[] {
+function recipeDetailLines(recipe: Recipe, lang: AppLanguage): string[] {
   const items: string[] = [];
   items.push(recipe.title);
-  items.push(`${recipe.difficulty}  ${recipe.prepTime + recipe.cookTime}min  ${recipe.servings} serv.`);
+  items.push(`${recipe.difficulty}  ${recipe.prepTime + recipe.cookTime}min  ${recipe.servings} ${t('recipe.servings', lang)}`);
   items.push('');
-  items.push('INGREDIENTS');
+  items.push(t('recipe.ingredients', lang).toUpperCase());
   recipe.ingredients.forEach((ing) => {
     items.push(truncate(`${ing.amount} ${ing.unit} ${ing.name}`, 40));
   });
   items.push('');
-  items.push('STEPS');
+  items.push(t('recipe.steps', lang).toUpperCase());
   recipe.steps.forEach((step, i) => {
     const timer = step.timerSeconds ? ` (${Math.ceil(step.timerSeconds / 60)}min)` : '';
     items.push(truncate(`${i + 1}. ${step.title}${timer}`, 40));
@@ -72,19 +74,19 @@ function recipeDetailLines(recipe: Recipe): string[] {
 }
 
 /** Max scroll position for recipe detail (content lines that overflow the visible area) */
-export function recipeDetailLineCount(recipe: Recipe): number {
-  const contentLength = recipeDetailLines(recipe).length - 1; // exclude title
+export function recipeDetailLineCount(recipe: Recipe, lang: AppLanguage): number {
+  const contentLength = recipeDetailLines(recipe, lang).length - 1; // exclude title
   return Math.max(0, contentLength - DETAIL_CONTENT_SLOTS);
 }
 
-function recipeDetailDisplay(recipe: Recipe, nav: GlassNavState): DisplayData {
-  const all = recipeDetailLines(recipe);
+function recipeDetailDisplay(recipe: Recipe, nav: GlassNavState, lang: AppLanguage): DisplayData {
+  const all = recipeDetailLines(recipe, lang);
   // Content = everything after the title (index 0), since title is in the header
   const content = all.slice(1);
   const contentSlots = DETAIL_CONTENT_SLOTS;
 
   // Fixed header
-  const headerLine = buildHeaderLine(recipe.title, buildStaticActionBar(['Start Cooking'], 0));
+  const headerLine = buildHeaderLine(recipe.title, buildStaticActionBar([t('recipe.startCooking', lang)], 0));
   const lines = [line(headerLine, 'normal', false)];
   lines.push(line('', 'normal', false));
 
@@ -112,12 +114,12 @@ function recipeDetailDisplay(recipe: Recipe, nav: GlassNavState): DisplayData {
 export const COOK_MODE_SCROLL = 100;
 export const COOK_MODE_STEPS = 200;
 
-export function getCookingButtons(hasTimer: boolean, isLastStep: boolean): string[] {
+export function getCookingButtons(hasTimer: boolean, isLastStep: boolean, lang: AppLanguage): string[] {
   const btns: string[] = [];
-  if (hasTimer) btns.push('Timer');
-  btns.push('Scroll');
-  btns.push('Steps');
-  if (isLastStep) btns.push('Finish');
+  if (hasTimer) btns.push(t('glass.timer', lang));
+  btns.push(t('glass.scroll', lang));
+  btns.push(t('glass.steps', lang));
+  if (isLastStep) btns.push(t('glass.finish', lang));
   return btns;
 }
 
@@ -193,17 +195,17 @@ export function cookingContentLineCount(recipe: Recipe, stepIndex: number, timer
 }
 
 
-function cookingDisplay(recipe: Recipe, stepIndex: number, timers: Record<number, TimerState>, nav: GlassNavState, flash: boolean): DisplayData {
+function cookingDisplay(recipe: Recipe, stepIndex: number, timers: Record<number, TimerState>, nav: GlassNavState, flash: boolean, lang: AppLanguage): DisplayData {
   const mode = cookingMode(nav.highlightedIndex);
   const step = recipe.steps[stepIndex];
   const hasTimer = Boolean(step?.timerSeconds);
   const isLastStep = stepIndex >= recipe.steps.length - 1;
-  const buttons = getCookingButtons(hasTimer, isLastStep);
+  const buttons = getCookingButtons(hasTimer, isLastStep, lang);
   const btnIdx = cookingButtonIndex(nav.highlightedIndex, buttons.length);
 
   // Top bar: step info + action buttons
-  const stepLabel = `Step ${stepIndex + 1}/${recipe.steps.length}: ${step?.title ?? ''}`;
-  const activeLabel = mode === 'scroll' ? 'Scroll' : mode === 'steps' ? 'Steps' : null;
+  const stepLabel = `${t('cooking.step', lang)} ${stepIndex + 1}/${recipe.steps.length}: ${step?.title ?? ''}`;
+  const activeLabel = mode === 'scroll' ? t('glass.scroll', lang) : mode === 'steps' ? t('glass.steps', lang) : null;
   const actionBar = buildActionBar(buttons, btnIdx, activeLabel, flash);
   const headerLine = buildHeaderLine(stepLabel, actionBar);
 
@@ -241,17 +243,17 @@ function cookingDisplay(recipe: Recipe, stepIndex: number, timers: Record<number
 // ── Complete ──
 // Action buttons: [Back to Recipes] [Cook Again]
 
-function completeDisplay(recipe: Recipe, nav: GlassNavState): DisplayData {
+function completeDisplay(recipe: Recipe, nav: GlassNavState, lang: AppLanguage): DisplayData {
   const btnIdx = Math.min(nav.highlightedIndex, 1);
-  const headerLine = buildHeaderLine(recipe.title, buildStaticActionBar(['Recipes', 'Cook Again'], btnIdx));
+  const headerLine = buildHeaderLine(recipe.title, buildStaticActionBar([t('glass.recipes', lang), t('complete.cookAgain', lang)], btnIdx));
 
   return {
     lines: [
       line(headerLine, 'normal', false),
       line('', 'normal'),
-      line('Bon Appetit!', 'normal'),
-      line(`${recipe.title} is ready to serve.`, 'meta'),
-      line(`${recipe.servings} servings prepared with care.`, 'meta'),
+      line(t('complete.title', lang), 'normal'),
+      line(`${recipe.title} ${t('complete.ready', lang)}`, 'meta'),
+      line(`${recipe.servings} ${t('glass.servings', lang)}`, 'meta'),
     ],
   };
 }
@@ -260,18 +262,19 @@ function completeDisplay(recipe: Recipe, nav: GlassNavState): DisplayData {
 
 export function toDisplayData(snapshot: KitchenSnapshot, nav: GlassNavState): DisplayData {
   const recipe = findRecipe(snapshot);
+  const lang = snapshot.language;
 
   switch (nav.screen) {
     case 'recipe-list':
       return recipeListDisplay(snapshot, nav);
     case 'recipe-detail':
-      if (recipe) return recipeDetailDisplay(recipe, nav);
+      if (recipe) return recipeDetailDisplay(recipe, nav, lang);
       return recipeListDisplay(snapshot, nav);
     case 'cooking':
-      if (recipe) return cookingDisplay(recipe, snapshot.currentStepIndex, snapshot.timers, nav, snapshot.flashPhase);
+      if (recipe) return cookingDisplay(recipe, snapshot.currentStepIndex, snapshot.timers, nav, snapshot.flashPhase, lang);
       return recipeListDisplay(snapshot, nav);
     case 'complete':
-      if (recipe) return completeDisplay(recipe, nav);
+      if (recipe) return completeDisplay(recipe, nav, lang);
       return recipeListDisplay(snapshot, nav);
     default:
       return recipeListDisplay(snapshot, nav);
