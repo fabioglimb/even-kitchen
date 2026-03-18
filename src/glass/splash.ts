@@ -1,8 +1,9 @@
 import { createSplash, TILE_PRESETS } from 'even-toolkit/splash';
 
 /**
- * Kitchen splash renderer — cooking pot with steam + app name (tile 1),
- * "Loading..." text (tile 2). Canvas is 200x200 (vertical 2-tile layout).
+ * Kitchen splash renderer — cooking pot with steam + app name.
+ * Single tile (200x100), top-center on display.
+ * "LOADING..." is shown as text in the menu container below.
  * Reusable: used for both G2 glasses splash and web hero canvas.
  */
 export function renderKitchenSplash(ctx: CanvasRenderingContext2D, w: number, h: number) {
@@ -79,25 +80,20 @@ export function renderKitchenSplash(ctx: CanvasRenderingContext2D, w: number, h:
   ctx.textAlign = 'center';
   ctx.fillText('EVENKITCHEN', cx, 88 * s);
 
-  // ── Tile 2: Loading text (bottom 100px, y=100..200) ──
-
-  ctx.fillStyle = dim;
-  ctx.font = `bold ${20 * s}px "Courier New", monospace`;
-  ctx.fillText('Loading...', cx, 155 * s);
-
   ctx.textAlign = 'left';
 }
 
 /**
- * G2 glasses splash — 2 vertical tiles, top-center on display.
- * Tile 1: Logo + name. Tile 2: "Loading..." (cleared with black on home transition).
+ * G2 glasses splash — 1 image tile (pot + name) top-center,
+ * "LOADING..." as centered text in the menu container below.
  */
 export const kitchenSplash = createSplash({
-  tiles: 2,
+  tiles: 1,
   tileLayout: 'vertical',
-  tilePositions: TILE_PRESETS.topCenterVertical2,
+  tilePositions: TILE_PRESETS.topCenter1,
+  canvasSize: { w: 200, h: 200 },
   minTimeMs: 2500,
   maxTimeMs: 5000,
-  menuText: '',
+  menuText: '\n\n' + ' '.repeat(48) + 'LOADING...',
   render: renderKitchenSplash,
 });
