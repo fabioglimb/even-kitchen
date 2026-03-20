@@ -38,7 +38,7 @@ html, body {
 }
 
 #root {
-  @apply max-w-[393px] mx-auto;
+  @apply max-w-[430px] mx-auto;
 }
 
 .scrollbar-hide {

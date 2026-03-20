@@ -4,6 +4,7 @@ import { useCookingContext } from "../contexts/CookingContext"
 import { useTimer } from "../hooks/useTimer"
 import { useCookingProgress } from "../hooks/useCookingProgress"
 import { Button, Progress, TimerRing, StepIndicator, NavHeader, EmptyState, AppShell } from "even-toolkit/web"
+import { IcChevronBack } from "even-toolkit/web/icons/svg-icons"
 
 export function CookingMode() {
   const { id } = useParams<{ id: string }>()
@@ -56,7 +57,7 @@ export function CookingMode() {
     <AppShell
       header={
         <>
-          <NavHeader title={recipe.title} left={<Button variant="ghost" size="icon" onClick={() => navigate(`/recipe/${recipe.id}`)}><svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></Button>} />
+          <NavHeader title={recipe.title} left={<Button variant="ghost" size="icon" onClick={() => navigate(`/recipe/${recipe.id}`)}><IcChevronBack width={20} height={20} /></Button>} />
           <div className="px-4 mt-3">
             <Progress value={progress} />
           </div>

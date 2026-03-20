@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router"
 import { useRecipeContext } from "../contexts/RecipeContext"
 import { useCookingContext } from "../contexts/CookingContext"
 import { Button, Badge, Card, SectionHeader, Divider, EmptyState, AppShell, NavHeader } from "even-toolkit/web"
+import { IcChevronBack } from "even-toolkit/web/icons/svg-icons"
 import { IngredientChip } from "../components/shared/IngredientChip"
 import { formatMinutes } from "../utils/format"
 
@@ -35,9 +36,7 @@ export function RecipeDetail() {
           title={recipe.title}
           left={
             <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15.75 19.5L8.25 12l7.5-7.5" />
-              </svg>
+              <IcChevronBack width={20} height={20} />
             </Button>
           }
         />

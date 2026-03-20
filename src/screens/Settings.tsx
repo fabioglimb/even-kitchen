@@ -2,6 +2,7 @@ import { useState, useRef } from "react"
 import { useNavigate } from "react-router"
 import { useRecipeContext } from "../contexts/RecipeContext"
 import { NavHeader, Button, Input, Select, SettingsGroup, SegmentedControl, StatGrid, Divider, Card, AppShell } from "even-toolkit/web"
+import { IcChevronBack } from "even-toolkit/web/icons/svg-icons"
 import { downloadJson, validateImportedRecipes } from "../utils/export"
 import { AI_PROVIDERS, APP_LANGUAGES, type AIProvider, type AppLanguage } from "../types/recipe"
 import { useTranslation } from "../hooks/useTranslation"
@@ -102,9 +103,7 @@ export function Settings() {
           title="Settings"
           left={
             <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-              </svg>
+              <IcChevronBack width={20} height={20} />
             </Button>
           }
         />
