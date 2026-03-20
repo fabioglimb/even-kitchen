@@ -58,7 +58,7 @@ export function CookingMode() {
       header={
         <>
           <NavHeader title={recipe.title} left={<Button variant="ghost" size="icon" onClick={() => navigate(`/recipe/${recipe.id}`)}><IcChevronBack width={20} height={20} /></Button>} />
-          <div className="px-4 mt-3">
+          <div className="px-3 mt-3 pb-2">
             <Progress value={progress} />
           </div>
         </>
