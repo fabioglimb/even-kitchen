@@ -1,50 +1,50 @@
 @import "tailwindcss";
+@import "even-toolkit/web/theme-light.css";
+@import "even-toolkit/web/typography.css";
+@import "even-toolkit/web/utilities.css";
 @source "../../src";
+@source "../../../even-toolkit";
 
 @theme {
-  --color-bg: #0c0a07;
-  --color-surface: #1a1510;
-  --color-surface-light: #24201a;
-  --color-surface-lighter: #302a22;
-  --color-border: #2e2820;
-  --color-border-light: #3d3528;
-  --color-text: #f0ebe3;
-  --color-text-dim: #8a7f72;
-  --color-text-muted: #6b6054;
-  --color-accent: var(--recipe-accent, #e07a5f);
-  --color-accent-alpha: rgba(224, 122, 95, 0.15);
-  --color-success: #26a69a;
-  --color-warning: #f0b429;
-  --font-display: "Playfair Display", serif;
-  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: "SF Mono", "Cascadia Code", monospace;
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-light: var(--color-surface-light);
+  --color-surface-lighter: var(--color-surface-lighter);
+  --color-border: var(--color-border);
+  --color-border-light: var(--color-border-light);
+  --color-text: var(--color-text);
+  --color-text-dim: var(--color-text-dim);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-highlight: var(--color-text-highlight);
+  --color-accent: var(--color-accent);
+  --color-accent-alpha: var(--color-accent-alpha);
+  --color-accent-warning: var(--color-accent-warning);
+  --color-positive: var(--color-positive);
+  --color-positive-alpha: var(--color-positive-alpha);
+  --color-negative: var(--color-negative);
+  --color-negative-alpha: var(--color-negative-alpha);
+  --color-overlay: var(--color-overlay);
+  --color-input-bg: var(--color-input-bg);
+  --radius-default: var(--radius-default);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
 }
 
-html, body, #root {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  overflow-x: hidden;
-}
-
-body {
-  font-family: var(--font-body);
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  min-height: 100dvh;
+html, body {
+  @apply bg-bg text-text min-h-dvh;
+  font-family: var(--font-display);
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3 {
-  font-family: var(--font-display);
+#root {
+  @apply max-w-[393px] mx-auto;
 }
 
-::-webkit-scrollbar {
-  width: 0px;
-  background: transparent;
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
-
-.timer-ring-circle {
-  transition: stroke-dashoffset 0.35s ease;
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

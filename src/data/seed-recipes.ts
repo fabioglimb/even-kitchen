@@ -95,7 +95,7 @@ export const seedRecipes: Recipe[] = [
     cookTime: 12,
     servings: 2,
     difficulty: "Easy",
-    heroEmoji: "\uD83E\uDE7D",
+    heroEmoji: "🍣",
     accentColor: "#e07a5f",
     ingredients: [
       { name: "Salmon Fillets", amount: "2", unit: "6oz" },

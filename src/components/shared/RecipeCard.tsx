@@ -1,7 +1,5 @@
 import { useNavigate } from "react-router"
-import { Card } from "../ui/Card"
-import { Badge } from "../ui/Badge"
-import { cn } from "../../utils/cn"
+import { Card, Badge, cn } from "even-toolkit/web"
 import { formatMinutes } from "../../utils/format"
 import type { Recipe } from "../../types/recipe"
 
@@ -16,28 +14,18 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
     <Card
       padding="none"
       variant="elevated"
-      className={cn(
-        "cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-transform overflow-hidden",
-        "border-l-4"
-      )}
-      style={
-        {
-          borderLeftColor: recipe.accentColor,
-          "--recipe-accent": recipe.accentColor,
-        } as React.CSSProperties
-      }
+      className="cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-transform overflow-hidden"
       onClick={() => navigate(`/recipe/${recipe.id}`)}
     >
       <div className="flex flex-col h-full">
-        <div
-          className="h-32 flex items-center justify-center text-6xl"
-          style={{ background: `${recipe.accentColor}15` }}
-        >
-          {recipe.heroEmoji}
+        <div className="h-32 flex items-center justify-center text-6xl bg-surface-light">
+          <span style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>
+            {recipe.heroEmoji}
+          </span>
         </div>
         <div className="p-4 flex flex-col gap-2 flex-1">
-          <h3 className="text-lg font-semibold leading-tight">{recipe.title}</h3>
-          <p className="text-sm text-text-muted leading-snug">{recipe.subtitle}</p>
+          <h3 className="text-[17px] tracking-[-0.17px] font-normal leading-tight">{recipe.title}</h3>
+          <p className="text-[13px] tracking-[-0.13px] text-text-muted leading-snug">{recipe.subtitle}</p>
           <div className="flex items-center gap-2 mt-auto pt-2">
             <Badge>{formatMinutes(recipe.prepTime + recipe.cookTime)}</Badge>
             <Badge>{recipe.difficulty}</Badge>

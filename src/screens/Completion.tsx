@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router"
 import { useRecipeContext } from "../contexts/RecipeContext"
 import { useCookingContext } from "../contexts/CookingContext"
-import { Button } from "../components/ui/Button"
+import { Button, Page, EmptyState } from "even-toolkit/web"
 
 export function Completion() {
   const { id } = useParams<{ id: string }>()
@@ -12,9 +12,9 @@ export function Completion() {
 
   if (!recipe) {
     return (
-      <div className="min-h-dvh flex items-center justify-center">
-        <p className="text-text-muted">Recipe not found.</p>
-      </div>
+      <Page>
+        <EmptyState title="Recipe not found" />
+      </Page>
     )
   }
 
@@ -25,15 +25,12 @@ export function Completion() {
   }
 
   return (
-    <div
-      className="min-h-dvh flex flex-col items-center justify-center px-4 text-center"
-      style={{ "--recipe-accent": recipe.accentColor } as React.CSSProperties}
-    >
-      <div className="text-8xl mb-6">{recipe.heroEmoji}</div>
+    <div className="min-h-dvh flex flex-col items-center justify-center px-4 text-center">
+      <div className="text-8xl mb-6" style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{recipe.heroEmoji}</div>
 
-      <h1 className="text-4xl font-bold mb-2">Bon Appetit!</h1>
-      <p className="text-text-muted text-lg mb-2">{recipe.title} is ready to serve.</p>
-      <p className="text-text-muted text-sm mb-10">
+      <h1 className="text-[24px] tracking-[-0.72px] font-normal mb-2">Bon Appetit!</h1>
+      <p className="text-text-muted text-[17px] tracking-[-0.17px] mb-2">{recipe.title} is ready to serve.</p>
+      <p className="text-text-muted text-[13px] tracking-[-0.13px] mb-10">
         {recipe.servings} servings prepared with care.
       </p>
 
@@ -47,7 +44,7 @@ export function Completion() {
         </Button>
         <Button
           size="lg"
-          variant="outline"
+          variant="default"
           className="w-full"
           onClick={() => navigate("/")}
         >

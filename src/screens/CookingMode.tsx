@@ -3,10 +3,7 @@ import { useRecipeContext } from "../contexts/RecipeContext"
 import { useCookingContext } from "../contexts/CookingContext"
 import { useTimer } from "../hooks/useTimer"
 import { useCookingProgress } from "../hooks/useCookingProgress"
-import { Button } from "../components/ui/Button"
-import { Progress } from "../components/ui/Progress"
-import { TimerRing } from "../components/shared/TimerRing"
-import { StepNavigation } from "../components/shared/StepNavigation"
+import { Button, Progress, TimerRing, StepIndicator, NavHeader, EmptyState, AppShell } from "even-toolkit/web"
 
 export function CookingMode() {
   const { id } = useParams<{ id: string }>()
@@ -19,9 +16,7 @@ export function CookingMode() {
 
   if (!recipe) {
     return (
-      <div className="min-h-dvh flex items-center justify-center">
-        <p className="text-text-muted">Recipe not found.</p>
-      </div>
+      <EmptyState title="Recipe not found" />
     )
   }
 
@@ -58,37 +53,32 @@ export function CookingMode() {
   }
 
   return (
-    <div
-      className="min-h-dvh flex flex-col"
-      style={{ "--recipe-accent": recipe.accentColor } as React.CSSProperties}
+    <AppShell
+      header={
+        <>
+          <NavHeader title={recipe.title} left={<Button variant="ghost" size="icon" onClick={() => navigate(`/recipe/${recipe.id}`)}><svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></Button>} />
+          <div className="px-4 mt-3">
+            <Progress value={progress} />
+          </div>
+        </>
+      }
+      footer={
+        <div className="px-4 py-4">
+          <StepIndicator
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            onPrev={handlePrev}
+            onNext={handleNext}
+          />
+        </div>
+      }
     >
-      {/* Top bar */}
-      <header className="px-4 pt-4 pb-2 flex items-center justify-between">
-        <button
-          onClick={() => navigate(`/recipe/${recipe.id}`)}
-          className="text-text-muted hover:text-text transition-colors cursor-pointer"
-        >
-          &larr; Exit
-        </button>
-        <span className="text-sm font-medium text-text-muted">{recipe.title}</span>
-        <div className="w-12" />
-      </header>
-
-      {/* Progress bar */}
-      <div className="px-4">
-        <Progress value={progress} />
-      </div>
-
-      {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-lg mx-auto w-full">
-        <span
-          className="text-xs font-bold uppercase tracking-wider mb-2"
-          style={{ color: recipe.accentColor }}
-        >
+        <span className="text-[11px] tracking-[-0.11px] font-normal text-text-dim mb-2">
           Step {currentStep} of {totalSteps}
         </span>
 
-        <h2 className="text-2xl font-bold text-center mb-4">{step.title}</h2>
+        <h2 className="text-[20px] tracking-[-0.6px] font-normal text-center mb-4">{step.title}</h2>
 
         <p className="text-text-muted text-center leading-relaxed mb-8">
           {step.instructions}
@@ -109,7 +99,7 @@ export function CookingMode() {
                 {timer.running ? "Pause" : (timer.remaining > 0 && timer.total > 0) ? "Resume" : "Start Timer"}
               </Button>
               {timer.total > 0 && timer.remaining > 0 && timer.remaining < timer.total && (
-                <Button size="sm" variant="outline" onClick={timer.reset}>
+                <Button size="sm" variant="default" onClick={timer.reset}>
                   Reset
                 </Button>
               )}
@@ -117,17 +107,6 @@ export function CookingMode() {
           </div>
         )}
       </div>
-
-      {/* Bottom navigation */}
-      <div className="px-4 pb-6 max-w-lg mx-auto w-full">
-        <StepNavigation
-          currentStep={currentStep}
-          totalSteps={totalSteps}
-          onPrev={handlePrev}
-          onNext={handleNext}
-          isLastStep={isLastStep}
-        />
-      </div>
-    </div>
+    </AppShell>
   )
 }

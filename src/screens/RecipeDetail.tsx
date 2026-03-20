@@ -2,9 +2,7 @@ import { useState } from "react"
 import { useParams, useNavigate } from "react-router"
 import { useRecipeContext } from "../contexts/RecipeContext"
 import { useCookingContext } from "../contexts/CookingContext"
-import { Button } from "../components/ui/Button"
-import { Badge } from "../components/ui/Badge"
-import { Card } from "../components/ui/Card"
+import { Button, Badge, Card, SectionHeader, Divider, EmptyState, AppShell, NavHeader } from "even-toolkit/web"
 import { IngredientChip } from "../components/shared/IngredientChip"
 import { formatMinutes } from "../utils/format"
 
@@ -19,9 +17,7 @@ export function RecipeDetail() {
 
   if (!recipe) {
     return (
-      <div className="min-h-dvh flex items-center justify-center">
-        <p className="text-text-muted">Recipe not found.</p>
-      </div>
+      <EmptyState title="Recipe not found" />
     )
   }
 
@@ -33,28 +29,31 @@ export function RecipeDetail() {
   }
 
   return (
-    <div
-      className="min-h-dvh"
-      style={{ "--recipe-accent": recipe.accentColor } as React.CSSProperties}
+    <AppShell
+      header={
+        <NavHeader
+          title={recipe.title}
+          left={
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </Button>
+          }
+        />
+      }
     >
       {/* Hero */}
-      <div
-        className="h-56 flex items-center justify-center text-8xl relative"
-        style={{ background: `${recipe.accentColor}18` }}
-      >
-        <button
-          onClick={() => navigate("/")}
-          className="absolute top-4 left-4 text-sm text-text-muted hover:text-text transition-colors cursor-pointer"
-        >
-          &larr; Back
-        </button>
-        {recipe.heroEmoji}
+      <div className="h-48 flex items-center justify-center text-8xl bg-surface-light">
+        <span style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>
+          {recipe.heroEmoji}
+        </span>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <div className="px-3 py-4 space-y-4">
         {/* Title */}
         <div>
-          <h1 className="text-3xl font-bold mb-1">{recipe.title}</h1>
+          <h1 className="text-[24px] tracking-[-0.72px] font-normal mb-0.5">{recipe.title}</h1>
           <p className="text-text-muted">{recipe.subtitle}</p>
           <div className="flex items-center gap-2 mt-3">
             <Badge variant="accent">{formatMinutes(recipe.prepTime + recipe.cookTime)}</Badge>
@@ -66,7 +65,7 @@ export function RecipeDetail() {
 
         {/* Ingredients */}
         <section>
-          <h2 className="text-xl font-semibold mb-3">Ingredients</h2>
+          <SectionHeader title="Ingredients" />
           <div className="flex flex-wrap gap-2">
             {recipe.ingredients.map((ing) => (
               <IngredientChip key={ing.name} ingredient={ing} />
@@ -76,19 +75,16 @@ export function RecipeDetail() {
 
         {/* Steps Overview */}
         <section>
-          <h2 className="text-xl font-semibold mb-3">Steps</h2>
+          <SectionHeader title="Steps" />
           <div className="space-y-3">
             {recipe.steps.map((step, i) => (
-              <Card key={i} className="flex items-start gap-3">
-                <span
-                  className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                  style={{ backgroundColor: recipe.accentColor }}
-                >
+              <Card key={i} className="flex items-center gap-3">
+                <span className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[13px] tracking-[-0.13px] font-normal text-text-highlight bg-accent">
                   {i + 1}
                 </span>
-                <div>
-                  <p className="font-medium">{step.title}</p>
-                  <p className="text-sm text-text-muted mt-0.5">{step.instructions}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] tracking-[-0.15px] font-normal">{step.title}</p>
+                  <p className="text-[13px] tracking-[-0.13px] text-text-muted mt-0.5">{step.instructions}</p>
                 </div>
               </Card>
             ))}
@@ -102,7 +98,7 @@ export function RecipeDetail() {
           </Button>
           <Button
             size="lg"
-            variant="outline"
+            variant="default"
             onClick={() => navigate(`/recipe/${recipe.id}/edit`)}
           >
             Edit
@@ -119,7 +115,8 @@ export function RecipeDetail() {
         </Button>
 
         {/* Delete */}
-        <div className="pt-4 border-t border-border">
+        <Divider variant="spaced" />
+        <div>
           <Button
             variant={confirmDelete ? "danger" : "danger"}
             className="w-full"
@@ -146,6 +143,6 @@ export function RecipeDetail() {
           )}
         </div>
       </div>
-    </div>
+    </AppShell>
   )
 }
