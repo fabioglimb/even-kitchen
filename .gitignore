@@ -4,3 +4,5 @@ dist
 *.local
 
 app.json
+CLAUDE.md
+.claude/
