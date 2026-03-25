@@ -92,7 +92,7 @@ export const kitchenSplash = createSplash({
   tileLayout: 'vertical',
   tilePositions: TILE_PRESETS.topCenter1,
   canvasSize: { w: 200, h: 200 },
-  minTimeMs: 2500,
+  minTimeMs: 1500,
   maxTimeMs: 5000,
   menuText: '\n\n' + ' '.repeat(48) + 'LOADING...',
   render: renderKitchenSplash,

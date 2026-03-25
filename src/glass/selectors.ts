@@ -1,8 +1,8 @@
 import type { DisplayData, GlassNavState } from 'even-toolkit/types';
-import { line } from 'even-toolkit/types';
+import { line, glassHeader } from 'even-toolkit/types';
 import { renderTimerLines } from 'even-toolkit/timer-display';
 import { buildActionBar, buildStaticActionBar } from 'even-toolkit/action-bar';
-import { truncate, buildHeaderLine, applyScrollIndicators, SCROLL_UP } from 'even-toolkit/text-utils';
+import { truncate, applyScrollIndicators, SCROLL_UP } from 'even-toolkit/text-utils';
 import type { Recipe, AppLanguage } from '../types/recipe';
 import type { TimerState } from '../contexts/CookingContext';
 import { t } from '../utils/i18n';
@@ -29,7 +29,7 @@ export function glassRecipes(snapshot: KitchenSnapshot): Recipe[] {
 
 function recipeListDisplay(snapshot: KitchenSnapshot, nav: GlassNavState): DisplayData {
   const active = glassRecipes(snapshot);
-  const maxVisible = 6; // fits below home image tile (168px / ~26px per line)
+  const maxVisible = 5; // fits below home image tile
   const hi = nav.highlightedIndex;
 
   // Sliding window centered on highlighted item (not start=hi, which puts it at position 0 where ▲ replaces it)
@@ -53,7 +53,7 @@ function recipeListDisplay(snapshot: KitchenSnapshot, nav: GlassNavState): Displ
 /** Max total lines on G2 display (raw bridge with paddingLength 6) */
 const G2_TEXT_LINES = 10;
 /** Max content lines in recipe detail */
-const DETAIL_CONTENT_SLOTS = G2_TEXT_LINES - 2; // 8
+const DETAIL_CONTENT_SLOTS = G2_TEXT_LINES - 3; // glassHeader takes 3 visual lines (header + separator + blank)
 
 function recipeDetailLines(recipe: Recipe, lang: AppLanguage): string[] {
   const items: string[] = [];
@@ -88,9 +88,7 @@ function recipeDetailDisplay(recipe: Recipe, nav: GlassNavState, lang: AppLangua
   const contentSlots = DETAIL_CONTENT_SLOTS;
 
   // Fixed header
-  const headerLine = buildHeaderLine(recipe.title, buildStaticActionBar([t('recipe.startCooking', lang)], 0));
-  const lines = [line(headerLine, 'normal', false)];
-  lines.push(line('', 'normal', false));
+  const lines = [...glassHeader(recipe.title, buildStaticActionBar([t('recipe.startCooking', lang)], 0))];
 
   // Window the content
   const scrollPos = nav.highlightedIndex;
@@ -192,7 +190,7 @@ export function cookingContentLineCount(recipe: Recipe, stepIndex: number, timer
     : 0;
   const instrCount = content.length - timerLineCount;
   // Available slots for instructions (reduced by overhead for word-wrapped lines)
-  const instrSlots = G2_TEXT_LINES - 2 - timerLineCount;
+  const instrSlots = G2_TEXT_LINES - 3 - timerLineCount; // glassHeader = 3 visual lines
   return Math.max(0, instrCount - instrSlots);
 }
 
@@ -209,7 +207,6 @@ function cookingDisplay(recipe: Recipe, stepIndex: number, timers: Record<number
   const stepLabel = `${t('cooking.step', lang)} ${stepIndex + 1}/${recipe.steps.length}: ${truncate(step?.title ?? '', 20)}`;
   const activeLabel = mode === 'scroll' ? t('glass.scroll', lang) : mode === 'steps' ? t('glass.steps', lang) : null;
   const actionBar = buildActionBar(buttons, btnIdx, activeLabel, flash);
-  const headerLine = buildHeaderLine(stepLabel, actionBar);
 
   // Build content (timer + instructions)
   const content = buildStepContent(recipe, stepIndex, timers);
@@ -222,9 +219,8 @@ function cookingDisplay(recipe: Recipe, stepIndex: number, timers: Record<number
   const timerPart = content.slice(0, timerLineCount);
   const instrPart = content.slice(timerLineCount);
 
-  // Always: header + blank + timer (fixed)
-  const lines = [line(headerLine, 'normal', false)];
-  lines.push(line('', 'normal', false));
+  // Always: header + separator + timer (fixed)
+  const lines = [...glassHeader(stepLabel, actionBar)];
   for (const t of timerPart) {
     lines.push(line(t, 'meta', false));
   }
@@ -247,12 +243,9 @@ function cookingDisplay(recipe: Recipe, stepIndex: number, timers: Record<number
 
 function completeDisplay(recipe: Recipe, nav: GlassNavState, lang: AppLanguage): DisplayData {
   const btnIdx = Math.min(nav.highlightedIndex, 1);
-  const headerLine = buildHeaderLine(recipe.title, buildStaticActionBar([t('glass.recipes', lang), t('complete.cookAgain', lang)], btnIdx));
-
   return {
     lines: [
-      line(headerLine, 'normal', false),
-      line('', 'normal'),
+      ...glassHeader(recipe.title, buildStaticActionBar([t('glass.recipes', lang), t('complete.cookAgain', lang)], btnIdx)),
       line(t('complete.title', lang), 'normal'),
       line(`${recipe.title} ${t('complete.ready', lang)}`, 'meta'),
       line(`${recipe.servings} ${t('glass.servings', lang)}`, 'meta'),
