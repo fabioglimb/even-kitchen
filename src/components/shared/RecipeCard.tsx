@@ -86,7 +86,7 @@ export function RecipeCard({ recipe, onDelete }: RecipeCardProps) {
           <div className="flex flex-col h-full">
             <div className="h-32 flex items-center justify-center text-6xl bg-surface-light">
               <span style={{ fontFamily: EMOJI_FONT }}>
-                {recipe.heroEmoji}
+                {recipe.heroEmoji || '🍣'}
               </span>
             </div>
             <div className="p-4 flex flex-col gap-2 flex-1">

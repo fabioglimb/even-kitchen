@@ -45,7 +45,7 @@ export function RecipeDetail() {
       {/* Hero */}
       <div className="h-48 flex items-center justify-center text-8xl bg-surface-light">
         <span style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>
-          {recipe.heroEmoji}
+          {recipe.heroEmoji || '🍣'}
         </span>
       </div>
 

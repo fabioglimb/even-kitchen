@@ -2,28 +2,23 @@ import { useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useGlasses } from 'even-toolkit/useGlasses';
 import { useFlashPhase } from 'even-toolkit/useFlashPhase';
+import { createScreenMapper, createIdExtractor, getHomeTiles } from 'even-toolkit/glass-router';
 import { useRecipeContext } from '../contexts/RecipeContext';
 import { kitchenSplash } from './splash';
 import { useCookingContext } from '../contexts/CookingContext';
-import { toDisplayData, type KitchenSnapshot } from './selectors';
-import { createActionHandler } from './actions';
+import { toDisplayData, onGlassAction, type KitchenSnapshot } from './selectors';
+import type { KitchenActions } from './shared';
 
-function deriveScreen(path: string): string {
-  if (path === '/') return 'recipe-list';
-  if (/^\/recipe\/[^/]+\/cook$/.test(path)) return 'cooking';
-  if (/^\/recipe\/[^/]+\/complete$/.test(path)) return 'complete';
-  if (/^\/recipe\/[^/]+$/.test(path)) return 'recipe-detail';
-  return 'recipe-list';
-}
+const deriveScreen = createScreenMapper([
+  { pattern: '/', screen: 'recipe-list' },
+  { pattern: /^\/recipe\/[^/]+\/cook$/, screen: 'cooking' },
+  { pattern: /^\/recipe\/[^/]+\/complete$/, screen: 'complete' },
+  { pattern: /^\/recipe\/[^/]+$/, screen: 'recipe-detail' },
+], 'recipe-list');
 
-function extractRecipeId(path: string): string | null {
-  const match = path.match(/^\/recipe\/([^/]+)/);
-  return match ? match[1] : null;
-}
+const extractRecipeId = createIdExtractor(/^\/recipe\/([^/]+)/);
 
-// Only use the first tile (logo) for home — padding tiles would create extra containers
-const allTiles = kitchenSplash.getTiles();
-const homeTiles = allTiles.length > 0 ? [allTiles[0]!] : [];
+const homeTiles = getHomeTiles(kitchenSplash);
 
 export function KitchenGlasses() {
   const { recipes, settings } = useRecipeContext();
@@ -76,19 +71,26 @@ export function KitchenGlasses() {
     }
   }, [getTimer, setStepTimer]);
 
-  const onGlassAction = useMemo(
-    () => createActionHandler(navigate, {
-      setCurrentStepIndex,
-      toggleTimer,
-      resetTimer: resetAllTimers,
-    }),
-    [navigate, setCurrentStepIndex, toggleTimer, resetAllTimers],
+  // Build context with side effects for screen action handlers
+  const ctxRef = useRef<KitchenActions>({
+    navigate,
+    setCurrentStepIndex,
+    toggleTimer,
+    resetTimer: resetAllTimers,
+  });
+  ctxRef.current = { navigate, setCurrentStepIndex, toggleTimer, resetTimer: resetAllTimers };
+
+  // Wrap the router's onGlassAction to inject context
+  const handleGlassAction = useCallback(
+    (action: Parameters<typeof onGlassAction>[0], nav: Parameters<typeof onGlassAction>[1], snap: KitchenSnapshot) =>
+      onGlassAction(action, nav, snap, ctxRef.current),
+    [],
   );
 
   useGlasses({
     getSnapshot,
     toDisplayData,
-    onGlassAction,
+    onGlassAction: handleGlassAction,
     deriveScreen,
     appName: 'EVENKITCHEN',
     splash: kitchenSplash,
