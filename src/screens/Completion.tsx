@@ -1,9 +1,10 @@
 import { useParams, useNavigate } from "react-router"
 import { useRecipeContext } from "../contexts/RecipeContext"
 import { useCookingContext } from "../contexts/CookingContext"
-import { Button, Page, EmptyState } from "even-toolkit/web"
+import { Button, Page, EmptyState, useDrawerHeader } from "even-toolkit/web"
 
 export function Completion() {
+  useDrawerHeader({ hidden: true })
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { recipes } = useRecipeContext()

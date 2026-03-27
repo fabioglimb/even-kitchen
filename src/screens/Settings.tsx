@@ -1,8 +1,7 @@
 import { useState, useRef } from "react"
 import { useNavigate } from "react-router"
 import { useRecipeContext } from "../contexts/RecipeContext"
-import { NavHeader, Button, Input, Select, SettingsGroup, SegmentedControl, StatGrid, Divider, Card, AppShell } from "even-toolkit/web"
-import { IcChevronBack } from "even-toolkit/web/icons/svg-icons"
+import { Button, Input, Select, SettingsGroup, SegmentedControl, StatGrid, Divider, Card, useDrawerHeader } from "even-toolkit/web"
 import { downloadJson, validateImportedRecipes } from "../utils/export"
 import { AI_PROVIDERS, APP_LANGUAGES, type AIProvider, type AppLanguage } from "../types/recipe"
 import { useTranslation } from "../hooks/useTranslation"
@@ -96,19 +95,9 @@ export function Settings() {
     setConfirmReset(false)
   }
 
+  useDrawerHeader({ title: 'Settings', backTo: '/' })
+
   return (
-    <AppShell
-      header={
-        <NavHeader
-          title="Settings"
-          left={
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-              <IcChevronBack width={20} height={20} />
-            </Button>
-          }
-        />
-      }
-    >
       <main className="px-3 pt-4 pb-8 space-y-4">
         {/* Language */}
         <SettingsGroup label={t('settings.language')}>
@@ -255,6 +244,5 @@ export function Settings() {
           </Card>
         </SettingsGroup>
       </main>
-    </AppShell>
   )
 }

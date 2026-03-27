@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router"
 import { useRecipeContext } from "../contexts/RecipeContext"
-import { NavHeader, Button, Input, Select, Textarea, Card, AppShell } from "even-toolkit/web"
+import { Button, Input, Select, Textarea, Card, useDrawerHeader } from "even-toolkit/web"
 import { generateId } from "../utils/format"
 import type { Recipe, Ingredient, Step } from "../types/recipe"
 
@@ -93,24 +93,21 @@ export function RecipeForm() {
     setSteps((prev) => prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)))
   }
 
+  useDrawerHeader({
+    title: isEdit ? "Edit Recipe" : "New Recipe",
+    left: (
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="text-[15px] tracking-[-0.15px] text-text-dim hover:text-text cursor-pointer px-2 py-1"
+      >
+        Cancel
+      </button>
+    ),
+    right: <Button size="sm" onClick={handleSave} disabled={!title.trim()}>Save</Button>,
+  })
+
   return (
-    <AppShell
-      header={
-        <NavHeader
-          title={isEdit ? "Edit Recipe" : "New Recipe"}
-          left={
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="text-[15px] tracking-[-0.15px] text-text-dim hover:text-text cursor-pointer px-2 py-1"
-            >
-              Cancel
-            </button>
-          }
-          right={<Button size="sm" onClick={handleSave} disabled={!title.trim()}>Save</Button>}
-        />
-      }
-    >
       <main className="px-3 pt-4 pb-8 space-y-4">
         {/* Basic Info */}
         <Card className="p-5 space-y-4">
@@ -304,6 +301,5 @@ export function RecipeForm() {
           </div>
         </Card>
       </main>
-    </AppShell>
   )
 }

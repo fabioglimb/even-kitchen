@@ -2,8 +2,8 @@ import { useState } from "react"
 import { useParams, useNavigate } from "react-router"
 import { useRecipeContext } from "../contexts/RecipeContext"
 import { useCookingContext } from "../contexts/CookingContext"
-import { Button, Badge, Card, SectionHeader, Divider, EmptyState, AppShell, NavHeader } from "even-toolkit/web"
-import { IcChevronBack } from "even-toolkit/web/icons/svg-icons"
+import { Button, Badge, Card, SectionHeader, Divider, EmptyState } from "even-toolkit/web"
+import { useDrawerHeader } from "even-toolkit/web"
 import { IngredientChip } from "../components/shared/IngredientChip"
 import { formatMinutes } from "../utils/format"
 
@@ -15,6 +15,11 @@ export function RecipeDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const recipe = recipes.find((r) => r.id === id)
+
+  useDrawerHeader({
+    title: recipe?.title ?? 'Recipe',
+    backTo: '/',
+  })
 
   if (!recipe) {
     return (
@@ -30,18 +35,7 @@ export function RecipeDetail() {
   }
 
   return (
-    <AppShell
-      header={
-        <NavHeader
-          title={recipe.title}
-          left={
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-              <IcChevronBack width={20} height={20} />
-            </Button>
-          }
-        />
-      }
-    >
+    <>
       {/* Hero */}
       <div className="h-48 flex items-center justify-center text-8xl bg-surface-light">
         <span style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>
@@ -142,6 +136,6 @@ export function RecipeDetail() {
           )}
         </div>
       </div>
-    </AppShell>
+    </>
   )
 }

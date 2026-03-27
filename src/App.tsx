@@ -8,6 +8,7 @@ import { CookingMode } from "./screens/CookingMode"
 import { Completion } from "./screens/Completion"
 import { Settings } from "./screens/Settings"
 import { KitchenGlasses } from "./glass/KitchenGlasses"
+import { Shell } from "./layouts/shell"
 
 export function App() {
   return (
@@ -16,13 +17,15 @@ export function App() {
         <BrowserRouter>
           <KitchenGlasses />
           <Routes>
-            <Route path="/" element={<RecipeLibrary />} />
-            <Route path="/recipe/new" element={<RecipeForm />} />
-            <Route path="/recipe/:id/edit" element={<RecipeForm />} />
-            <Route path="/recipe/:id" element={<RecipeDetail />} />
-            <Route path="/recipe/:id/cook" element={<CookingMode />} />
-            <Route path="/recipe/:id/complete" element={<Completion />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route element={<Shell />}>
+              <Route path="/" element={<RecipeLibrary />} />
+              <Route path="/recipe/new" element={<RecipeForm />} />
+              <Route path="/recipe/:id/edit" element={<RecipeForm />} />
+              <Route path="/recipe/:id" element={<RecipeDetail />} />
+              <Route path="/recipe/:id/cook" element={<CookingMode />} />
+              <Route path="/recipe/:id/complete" element={<Completion />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
           </Routes>
         </BrowserRouter>
       </CookingProvider>
