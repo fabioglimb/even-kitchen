@@ -2,7 +2,7 @@ import type { AppLanguage } from '../types/recipe'
 
 const translations: Record<string, Record<AppLanguage, string>> = {
   // App
-  'app.title': { en: 'Even Kitchen', it: 'Even Kitchen', es: 'Even Kitchen', fr: 'Even Kitchen', de: 'Even Kitchen', pt: 'Even Kitchen', ja: 'Even Kitchen', zh: 'Even Kitchen', ko: 'Even Kitchen', ru: 'Even Kitchen' },
+  'app.title': { en: 'ER Kitchen', it: 'ER Kitchen', es: 'ER Kitchen', fr: 'ER Kitchen', de: 'ER Kitchen', pt: 'ER Kitchen', ja: 'ER Kitchen', zh: 'ER Kitchen', ko: 'ER Kitchen', ru: 'ER Kitchen' },
   'app.subtitle': { en: 'What are we cooking today?', it: 'Cosa cuciniamo oggi?', es: 'Que cocinamos hoy?', fr: 'Que cuisinons-nous aujourd\'hui?', de: 'Was kochen wir heute?', pt: 'O que cozinhamos hoje?', ja: '今日は何を作りますか?', zh: '今天做什么菜?', ko: '오늘 뭘 요리할까요?', ru: 'Что приготовим сегодня?' },
 
   // Recipe Detail
@@ -55,7 +55,7 @@ const translations: Record<string, Record<AppLanguage, string>> = {
   'settings.confirmReset': { en: 'Confirm Reset -- Tap Again', it: 'Conferma -- Tocca Ancora', es: 'Confirmar -- Toca de Nuevo', fr: 'Confirmer -- Appuyez', de: 'Bestatigen -- Erneut tippen', pt: 'Confirmar -- Toque Novamente', ja: '確認 -- もう一度タップ', zh: '確认 -- 再次点击', ko: '확인 -- 다시 탭', ru: 'Подтвердить -- Нажмите ещё раз' },
   'settings.cancel': { en: 'Cancel', it: 'Annulla', es: 'Cancelar', fr: 'Annuler', de: 'Abbrechen', pt: 'Cancelar', ja: 'キャンセル', zh: '取消', ko: '취소', ru: 'Отмена' },
   'settings.about': { en: 'About', it: 'Info', es: 'Acerca de', fr: 'A propos', de: 'Info', pt: 'Sobre', ja: '情報', zh: '关于', ko: '정보', ru: 'О приложении' },
-  'settings.aboutText': { en: 'Even Kitchen v1.0 -- A guided cooking companion for your recipes.', it: 'Even Kitchen v1.0 -- Un compagno di cucina guidato per le tue ricette.', es: 'Even Kitchen v1.0 -- Un companero de cocina guiado.', fr: 'Even Kitchen v1.0 -- Un compagnon de cuisine guide.', de: 'Even Kitchen v1.0 -- Ein gefuhrter Kochbegleiter.', pt: 'Even Kitchen v1.0 -- Um companheiro de cozinha guiado.', ja: 'Even Kitchen v1.0 -- ガイド付きクッキングコンパニオン', zh: 'Even Kitchen v1.0 -- 你的烹饪伴侣', ko: 'Even Kitchen v1.0 -- 가이드 요리 도우미', ru: 'Even Kitchen v1.0 -- Кулинарный помощник для ваших рецептов.' },
+  'settings.aboutText': { en: 'ER Kitchen v1.0 -- A guided cooking companion for your recipes.', it: 'ER Kitchen v1.0 -- Un compagno di cucina guidato per le tue ricette.', es: 'ER Kitchen v1.0 -- Un companero de cocina guiado.', fr: 'ER Kitchen v1.0 -- Un compagnon de cuisine guide.', de: 'ER Kitchen v1.0 -- Ein gefuhrter Kochbegleiter.', pt: 'ER Kitchen v1.0 -- Um companheiro de cozinha guiado.', ja: 'ER Kitchen v1.0 -- ガイド付きクッキングコンパニオン', zh: 'ER Kitchen v1.0 -- 你的烹饪伴侣', ko: 'ER Kitchen v1.0 -- 가이드 요리 도우미', ru: 'ER Kitchen v1.0 -- Кулинарный помощник для ваших рецептов.' },
   'settings.localData': { en: 'Data is stored locally in your browser.', it: 'I dati sono salvati localmente nel browser.', es: 'Los datos se almacenan localmente en el navegador.', fr: 'Donnees stockees localement.', de: 'Daten werden lokal gespeichert.', pt: 'Dados armazenados localmente.', ja: 'データはブラウザにローカル保存されます。', zh: '数据存储在浏览器本地。', ko: '데이터는 브라우저에 로컬 저장됩니다.', ru: 'Данные хранятся локально в вашем браузере.' },
 
   // Recipe Form

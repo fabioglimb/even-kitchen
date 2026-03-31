@@ -70,14 +70,7 @@ ctx.beginPath();
 ctx.arc(cx, rimY - 3*s, 3*s, 0, Math.PI * 2);
 ctx.fill();
 
-ctx.fillStyle = fg;
-ctx.font = `bold ${12*s}px "Courier New", monospace`;
-ctx.textAlign = 'center';
-ctx.fillText('EVENKITCHEN', cx, cy + 28*s);
-
-ctx.fillStyle = dim;
-ctx.font = `${9*s}px "Courier New", monospace`;
-ctx.fillText('Loading...', cx, cy + 42*s);
+// Icon only — no text overlay
 
 // Right-click canvas to save as PNG
 </script>

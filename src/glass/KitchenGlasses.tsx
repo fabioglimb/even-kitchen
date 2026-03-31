@@ -92,7 +92,7 @@ export function KitchenGlasses() {
     toDisplayData,
     onGlassAction: handleGlassAction,
     deriveScreen,
-    appName: 'EVENKITCHEN',
+    appName: 'ER KITCHEN',
     splash: kitchenSplash,
     getPageMode: (screen) => screen === 'recipe-list' ? 'home' : 'text',
     homeImageTiles: homeTiles,

@@ -10,7 +10,7 @@ const BOTTOM_ITEMS: SideDrawerItem[] = [
 ];
 
 function getPageTitle(pathname: string): string {
-  if (pathname === '/') return 'EvenKitchen';
+  if (pathname === '/') return 'ER Kitchen';
   if (pathname === '/recipe/new') return 'New Recipe';
   if (pathname.includes('/edit')) return 'Edit Recipe';
   if (pathname.includes('/cook')) return 'Cooking';
@@ -44,7 +44,7 @@ export function Shell() {
     <DrawerShell
       items={MENU_ITEMS}
       bottomItems={BOTTOM_ITEMS}
-      title="EvenKitchen"
+      title="ER Kitchen"
       getPageTitle={getPageTitle}
       deriveActiveId={deriveActiveId}
       getBackPath={getBackPath}

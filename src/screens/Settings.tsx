@@ -238,7 +238,7 @@ export function Settings() {
         <SettingsGroup label="About">
           <Card className="p-5 space-y-2">
             <p className="text-[13px] tracking-[-0.13px] text-text-muted">
-              Even Kitchen v1.0 -- A guided cooking companion for your recipes.
+              ER Kitchen v1.0 -- A guided cooking companion for your recipes.
             </p>
             <p className="text-[11px] tracking-[-0.11px] text-text-muted">Data is stored locally in your browser.</p>
           </Card>
