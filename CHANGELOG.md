@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.6
+
+Released: 2026-04-02
+
+No breaking changes.
+
+### Changed
+
+- aligned the app with `even-toolkit` 1.6.2 for the current shared web header/layout fixes
+- GitHub releases are now part of the maintained release flow alongside the local changelog
+
+### Notes
+
+- recipe data, imports, and local storage remain compatible with previous 0.1.x releases
+
+
 ## 0.1.5
 
 Released: 2026-04-02
