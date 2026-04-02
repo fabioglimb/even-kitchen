@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
-import { storageGetSync, storageSet } from "even-toolkit/storage"
+import { storageGet, storageSet } from "even-toolkit/storage"
 
 export interface TimerState {
   running: boolean
@@ -24,34 +24,35 @@ interface CookingContextValue {
 const STORAGE_KEY = 'even-kitchen:cooking'
 const DEFAULT_TIMER: TimerState = { running: false, remaining: 0, total: 0 }
 
-function loadCookingState(): CookingState {
-  const parsed = storageGetSync<{ currentStepIndex?: number; timers?: Record<string, TimerState> } | null>(STORAGE_KEY, null)
-  if (parsed) {
-    // Pause any running timers on restore (since time has passed)
-    const timers: Record<number, TimerState> = {}
-    for (const [key, val] of Object.entries(parsed.timers ?? {})) {
-      const t = val as TimerState
-      timers[Number(key)] = { ...t, running: false }
-    }
-    return { currentStepIndex: parsed.currentStepIndex ?? 0, timers }
-  }
-  return { currentStepIndex: 0, timers: {} }
-}
-
-function saveCookingState(state: CookingState): void {
-  storageSet(STORAGE_KEY, state)
-}
-
 const CookingContext = createContext<CookingContextValue | null>(null)
 
 export function CookingProvider({ children }: { children: ReactNode }) {
-  const [currentStepIndex, setCurrentStepIndex] = useState(() => loadCookingState().currentStepIndex)
-  const [timers, setTimers] = useState<Record<number, TimerState>>(() => loadCookingState().timers)
+  const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [timers, setTimers] = useState<Record<number, TimerState>>({})
+  const [loaded, setLoaded] = useState(false)
 
-  // Persist on change
+  // Load cooking state async on mount
   useEffect(() => {
-    saveCookingState({ currentStepIndex, timers })
-  }, [currentStepIndex, timers])
+    storageGet<{ currentStepIndex?: number; timers?: Record<string, TimerState> } | null>(STORAGE_KEY, null).then((parsed) => {
+      if (parsed) {
+        // Pause any running timers on restore (since time has passed)
+        const restoredTimers: Record<number, TimerState> = {}
+        for (const [key, val] of Object.entries(parsed.timers ?? {})) {
+          const t = val as TimerState
+          restoredTimers[Number(key)] = { ...t, running: false }
+        }
+        setCurrentStepIndex(parsed.currentStepIndex ?? 0)
+        setTimers(restoredTimers)
+      }
+      setLoaded(true)
+    })
+  }, [])
+
+  // Persist on change (fire-and-forget)
+  useEffect(() => {
+    if (!loaded) return
+    storageSet(STORAGE_KEY, { currentStepIndex, timers } as CookingState)
+  }, [currentStepIndex, timers, loaded])
 
   const getTimer = useCallback(
     (stepIndex: number): TimerState => timers[stepIndex] ?? DEFAULT_TIMER,

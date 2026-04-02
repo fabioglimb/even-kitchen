@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect, useMemo, type ReactNode } from 'react'
+import { createContext, useContext, useReducer, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Recipe, AppSettings } from '../types/recipe'
 import { loadRecipes, saveRecipes, loadSettings, decryptSettings, saveSettingsEncrypted } from '../data/persistence'
 import { seedRecipes } from '../data/seed-recipes'
@@ -9,6 +9,15 @@ interface RecipeState {
   settings: AppSettings
   selectedRecipe: Recipe | null
   categoryFilter: string
+}
+
+const DEFAULT_SETTINGS: AppSettings = {
+  language: 'en',
+  aiProvider: 'openai',
+  aiModel: 'gpt-4o-mini',
+  openaiApiKey: '',
+  anthropicApiKey: '',
+  deepseekApiKey: '',
 }
 
 // --- Actions ---
@@ -22,6 +31,7 @@ type RecipeAction =
   | { type: 'TOGGLE_ARCHIVE'; id: string }
   | { type: 'RESET_TO_DEFAULTS' }
   | { type: 'SET_SETTINGS'; settings: AppSettings }
+  | { type: 'INIT'; recipes: Recipe[]; settings: AppSettings }
 
 // --- Context value ---
 interface RecipeContextValue {
@@ -30,6 +40,7 @@ interface RecipeContextValue {
   categories: string[]
   selectedRecipe: Recipe | null
   categoryFilter: string
+  loaded: boolean
   setSelectedRecipe: (recipe: Recipe | null) => void
   setCategoryFilter: (category: string) => void
   addRecipe: (recipe: Recipe) => void
@@ -46,6 +57,8 @@ const RecipeContext = createContext<RecipeContextValue | null>(null)
 // --- Reducer ---
 function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
   switch (action.type) {
+    case 'INIT':
+      return { ...state, recipes: action.recipes, settings: action.settings }
     case 'SET_SELECTED':
       return { ...state, selectedRecipe: action.recipe }
     case 'SET_CATEGORY_FILTER':
@@ -86,36 +99,35 @@ function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
 
 // --- Provider ---
 export function RecipeProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(recipeReducer, null, () => ({
-    recipes: loadRecipes(),
-    settings: loadSettings(), // Keys are still encrypted at this point
+  const [state, dispatch] = useReducer(recipeReducer, {
+    recipes: seedRecipes,
+    settings: DEFAULT_SETTINGS,
     selectedRecipe: null,
     categoryFilter: 'All',
-  }))
+  })
+  const [loaded, setLoaded] = useState(false)
 
-  // Decrypt API keys after mount (async)
+  // Load data async on mount
   useEffect(() => {
-    decryptSettings(state.settings).then((decrypted) => {
-      // Only dispatch if keys actually changed (avoids loop)
-      if (
-        decrypted.openaiApiKey !== state.settings.openaiApiKey ||
-        decrypted.anthropicApiKey !== state.settings.anthropicApiKey ||
-        decrypted.deepseekApiKey !== state.settings.deepseekApiKey
-      ) {
-        dispatch({ type: 'SET_SETTINGS', settings: decrypted })
-      }
-    })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // Only on mount
+    async function init() {
+      const [recipes, rawSettings] = await Promise.all([loadRecipes(), loadSettings()])
+      const settings = await decryptSettings(rawSettings)
+      dispatch({ type: 'INIT', recipes, settings })
+      setLoaded(true)
+    }
+    init()
+  }, [])
 
   useEffect(() => {
+    if (!loaded) return
     saveRecipes(state.recipes)
-  }, [state.recipes])
+  }, [state.recipes, loaded])
 
   useEffect(() => {
+    if (!loaded) return
     // Save with encryption (async, fire-and-forget)
     saveSettingsEncrypted(state.settings)
-  }, [state.settings])
+  }, [state.settings, loaded])
 
   const categories = useMemo(
     () => ['All', ...Array.from(new Set(state.recipes.map((r) => r.category)))],
@@ -128,6 +140,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     categories,
     selectedRecipe: state.selectedRecipe,
     categoryFilter: state.categoryFilter,
+    loaded,
     setSelectedRecipe: (recipe) => dispatch({ type: 'SET_SELECTED', recipe }),
     setCategoryFilter: (category) => dispatch({ type: 'SET_CATEGORY_FILTER', category }),
     addRecipe: (recipe) => dispatch({ type: 'ADD_RECIPE', recipe }),
