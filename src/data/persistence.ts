@@ -1,6 +1,5 @@
 import type { Recipe, AppSettings } from '../types/recipe'
 import { seedRecipes } from './seed-recipes'
-import { encryptValue, decryptValue } from '../utils/crypto'
 import { storageGetSync, storageSet, storageRemove } from 'even-toolkit/storage'
 
 const STORAGE_KEY_RECIPES = 'even-kitchen:recipes'
@@ -31,52 +30,26 @@ export function saveRecipes(recipes: Recipe[]): void {
   storageSet(STORAGE_KEY_RECIPES, recipes)
 }
 
-/**
- * Load settings synchronously (for initial React state).
- * API keys are encrypted — they'll be decrypted async after mount.
- */
 export function loadSettings(): AppSettings {
   const stored = storageGetSync<Partial<AppSettings> | null>(STORAGE_KEY_SETTINGS, null)
-  if (stored) {
-    return { ...DEFAULT_SETTINGS, ...stored }
-  }
+  if (stored) return { ...DEFAULT_SETTINGS, ...stored }
   return { ...DEFAULT_SETTINGS }
 }
 
 /**
- * Decrypt API keys from stored settings.
- * Call this async after mount to populate the real keys.
+ * Decrypt is now a no-op — keys stored in plaintext via SDK storage.
+ * Kept for API compatibility with RecipeContext.
  */
 export async function decryptSettings(settings: AppSettings): Promise<AppSettings> {
-  const [openai, anthropic, deepseek] = await Promise.all([
-    decryptValue(settings.openaiApiKey),
-    decryptValue(settings.anthropicApiKey),
-    decryptValue(settings.deepseekApiKey),
-  ])
-  return {
-    ...settings,
-    openaiApiKey: openai,
-    anthropicApiKey: anthropic,
-    deepseekApiKey: deepseek,
-  }
+  return settings
 }
 
 /**
- * Save settings with encrypted API keys.
+ * Save settings directly — no encryption needed.
+ * SDK storage is sandboxed per-app in Even Hub.
  */
 export async function saveSettingsEncrypted(settings: AppSettings): Promise<void> {
-  const [openai, anthropic, deepseek] = await Promise.all([
-    encryptValue(settings.openaiApiKey),
-    encryptValue(settings.anthropicApiKey),
-    encryptValue(settings.deepseekApiKey),
-  ])
-  const toStore = {
-    ...settings,
-    openaiApiKey: openai,
-    anthropicApiKey: anthropic,
-    deepseekApiKey: deepseek,
-  }
-  storageSet(STORAGE_KEY_SETTINGS, toStore)
+  storageSet(STORAGE_KEY_SETTINGS, settings)
 }
 
 export function resetRecipes(): void {
