@@ -4,6 +4,7 @@ import { useCookingContext } from "../contexts/CookingContext"
 import { useTimer } from "../hooks/useTimer"
 import { useCookingProgress } from "../hooks/useCookingProgress"
 import { Button, Progress, TimerRing, StepIndicator, EmptyState, useDrawerHeader } from "even-toolkit/web"
+import { useTranslation } from "../hooks/useTranslation"
 
 export function CookingMode() {
   const { id } = useParams<{ id: string }>()
@@ -13,6 +14,7 @@ export function CookingMode() {
   const { currentStepIndex, setCurrentStepIndex } = useCookingContext()
   const timer = useTimer()
   const { progress, isLastStep, currentStep, totalSteps } = useCookingProgress(recipe)
+  const { t } = useTranslation()
 
   const handlePrev = () => {
     if (currentStepIndex > 0) {
@@ -29,7 +31,7 @@ export function CookingMode() {
   }
 
   useDrawerHeader({
-    title: recipe?.title ?? 'Cooking',
+    title: recipe?.title ?? t('cooking.title'),
     backTo: recipe ? `/recipe/${recipe.id}` : '/',
     below: (
       <div className="px-3 mt-3 pb-2">
@@ -50,7 +52,7 @@ export function CookingMode() {
 
   if (!recipe) {
     return (
-      <EmptyState title="Recipe not found" />
+      <EmptyState title={t('recipe.notFound')} />
     )
   }
 
@@ -75,7 +77,7 @@ export function CookingMode() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-lg mx-auto w-full">
       <span className="text-[11px] tracking-[-0.11px] font-normal text-text-dim mb-2">
-        Step {currentStep} of {totalSteps}
+        {t('cooking.stepOf').replace('{current}', String(currentStep)).replace('{total}', String(totalSteps))}
       </span>
 
       <h2 className="text-[20px] tracking-[-0.6px] font-normal text-center mb-4">{step.title}</h2>
@@ -96,11 +98,11 @@ export function CookingMode() {
               size="sm"
               onClick={handleTimerToggle}
             >
-              {timer.running ? "Pause" : (timer.remaining > 0 && timer.total > 0) ? "Resume" : "Start Timer"}
+              {timer.running ? t('cooking.pause') : (timer.remaining > 0 && timer.total > 0) ? t('cooking.resume') : t('cooking.startTimer')}
             </Button>
             {timer.total > 0 && timer.remaining > 0 && timer.remaining < timer.total && (
               <Button size="sm" variant="default" onClick={timer.reset}>
-                Reset
+                {t('cooking.reset')}
               </Button>
             )}
           </div>

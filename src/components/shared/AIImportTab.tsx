@@ -3,12 +3,14 @@ import { useRecipeContext } from "../../contexts/RecipeContext"
 import { useRecipeExtractor } from "../../hooks/useRecipeExtractor"
 import { Button, Card, Badge, Input } from "even-toolkit/web"
 import { formatMinutes } from "../../utils/format"
+import { useTranslation } from "../../hooks/useTranslation"
 
 export function AIImportTab() {
   const { addRecipe } = useRecipeContext()
   const { loading, error, extractedRecipe, extractFromUrl, reset } = useRecipeExtractor()
   const [url, setUrl] = useState("")
   const [saved, setSaved] = useState(false)
+  const { t } = useTranslation()
 
   const handleExtract = () => {
     if (!url.trim()) return
@@ -42,27 +44,27 @@ export function AIImportTab() {
       {/* URL Input */}
       <Card className="p-5 space-y-3">
         <h3 className="text-[13px] tracking-[-0.13px] font-normal text-text-muted uppercase">
-          Extract Recipe from URL
+          {t('ai.extractTitle')}
         </h3>
         <div className="flex gap-2">
           <Input
             className="flex-1"
-            placeholder="https://example.com/recipe..."
+            placeholder={t('ai.urlPlaceholder')}
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleExtract()}
           />
           <Button size="sm" variant="ghost" onClick={handlePaste}>
-            Paste
+            {t('ai.paste')}
           </Button>
         </div>
         <div className="flex gap-2">
           <Button onClick={handleExtract} disabled={loading || !url.trim()}>
-            {loading ? "Extracting..." : "Extract Recipe"}
+            {loading ? t('ai.extracting') : t('ai.extract')}
           </Button>
           {(extractedRecipe || error) && (
             <Button variant="ghost" onClick={handleReset}>
-              Clear
+              {t('ai.clear')}
             </Button>
           )}
         </div>
@@ -72,7 +74,7 @@ export function AIImportTab() {
       {loading && (
         <Card className="p-5 flex items-center justify-center gap-3">
           <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-          <span className="text-[13px] tracking-[-0.13px] text-text-muted">Analyzing recipe...</span>
+          <span className="text-[13px] tracking-[-0.13px] text-text-muted">{t('ai.analyzing')}</span>
         </Card>
       )}
 
@@ -96,7 +98,7 @@ export function AIImportTab() {
                   {formatMinutes(extractedRecipe.prepTime + extractedRecipe.cookTime)}
                 </Badge>
                 <Badge>{extractedRecipe.difficulty}</Badge>
-                <Badge>{extractedRecipe.servings} servings</Badge>
+                <Badge>{extractedRecipe.servings} {t('ai.servings')}</Badge>
                 <Badge>{extractedRecipe.category}</Badge>
               </div>
             </div>
@@ -104,7 +106,7 @@ export function AIImportTab() {
 
           <div>
             <h4 className="text-[13px] tracking-[-0.13px] font-normal mb-2">
-              Ingredients ({extractedRecipe.ingredients.length})
+              {t('ai.ingredientsCount').replace('{count}', String(extractedRecipe.ingredients.length))}
             </h4>
             <div className="flex flex-wrap gap-1">
               {extractedRecipe.ingredients.map((ing, i) => (
@@ -120,7 +122,7 @@ export function AIImportTab() {
 
           <div>
             <h4 className="text-[13px] tracking-[-0.13px] font-normal mb-2">
-              Steps ({extractedRecipe.steps.length})
+              {t('ai.stepsCount').replace('{count}', String(extractedRecipe.steps.length))}
             </h4>
             <ol className="space-y-1 text-[13px] tracking-[-0.13px] text-text-muted">
               {extractedRecipe.steps.map((step, i) => (
@@ -137,10 +139,10 @@ export function AIImportTab() {
           </div>
 
           {saved ? (
-            <p className="text-[13px] tracking-[-0.13px] text-positive font-normal">Saved to library!</p>
+            <p className="text-[13px] tracking-[-0.13px] text-positive font-normal">{t('ai.saved')}</p>
           ) : (
             <Button className="w-full" onClick={handleSave}>
-              Save to Library
+              {t('ai.saveToLibrary')}
             </Button>
           )}
         </Card>

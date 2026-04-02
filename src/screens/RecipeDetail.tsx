@@ -6,6 +6,7 @@ import { Button, Badge, Card, SectionHeader, Divider, EmptyState } from "even-to
 import { useDrawerHeader } from "even-toolkit/web"
 import { IngredientChip } from "../components/shared/IngredientChip"
 import { formatMinutes } from "../utils/format"
+import { useTranslation } from "../hooks/useTranslation"
 
 export function RecipeDetail() {
   const { id } = useParams<{ id: string }>()
@@ -13,17 +14,18 @@ export function RecipeDetail() {
   const { recipes, setSelectedRecipe, deleteRecipe, toggleArchive } = useRecipeContext()
   const { setCurrentStepIndex, resetAllTimers } = useCookingContext()
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const { t } = useTranslation()
 
   const recipe = recipes.find((r) => r.id === id)
 
   useDrawerHeader({
-    title: recipe?.title ?? 'Recipe',
+    title: recipe?.title ?? t('form.recipe'),
     backTo: '/',
   })
 
   if (!recipe) {
     return (
-      <EmptyState title="Recipe not found" />
+      <EmptyState title={t('recipe.notFound')} />
     )
   }
 
@@ -51,14 +53,14 @@ export function RecipeDetail() {
           <div className="flex items-center gap-2 mt-3">
             <Badge variant="accent">{formatMinutes(recipe.prepTime + recipe.cookTime)}</Badge>
             <Badge>{recipe.difficulty}</Badge>
-            <Badge>{recipe.servings} servings</Badge>
+            <Badge>{recipe.servings} {t('recipe.servingsCount')}</Badge>
             <Badge>{recipe.category}</Badge>
           </div>
         </div>
 
         {/* Ingredients */}
         <section>
-          <SectionHeader title="Ingredients" />
+          <SectionHeader title={t('recipe.ingredients')} />
           <div className="flex flex-wrap gap-2">
             {recipe.ingredients.map((ing) => (
               <IngredientChip key={ing.name} ingredient={ing} />
@@ -68,7 +70,7 @@ export function RecipeDetail() {
 
         {/* Steps Overview */}
         <section>
-          <SectionHeader title="Steps" />
+          <SectionHeader title={t('recipe.steps')} />
           <div className="space-y-3">
             {recipe.steps.map((step, i) => (
               <Card key={i} className="flex items-center gap-3">
@@ -87,14 +89,14 @@ export function RecipeDetail() {
         {/* CTA */}
         <div className="flex gap-3">
           <Button size="lg" className="flex-1" onClick={handleStartCooking}>
-            Start Cooking
+            {t('recipe.startCooking')}
           </Button>
           <Button
             size="lg"
             variant="default"
             onClick={() => navigate(`/recipe/${recipe.id}/edit`)}
           >
-            Edit
+            {t('recipe.edit')}
           </Button>
         </div>
 
@@ -104,7 +106,7 @@ export function RecipeDetail() {
           className="w-full"
           onClick={() => toggleArchive(recipe.id)}
         >
-          {recipe.archived ? "Unarchive Recipe" : "Archive Recipe"}
+          {recipe.archived ? t('recipe.unarchive') : t('recipe.archive')}
         </Button>
 
         {/* Delete */}
@@ -122,7 +124,7 @@ export function RecipeDetail() {
               navigate("/")
             }}
           >
-            {confirmDelete ? "Tap Again to Confirm Delete" : "Delete Recipe"}
+            {confirmDelete ? t('recipe.confirmDelete') : t('recipe.delete')}
           </Button>
           {confirmDelete && (
             <Button
@@ -131,7 +133,7 @@ export function RecipeDetail() {
               className="w-full mt-2"
               onClick={() => setConfirmDelete(false)}
             >
-              Cancel
+              {t('form.cancel')}
             </Button>
           )}
         </div>

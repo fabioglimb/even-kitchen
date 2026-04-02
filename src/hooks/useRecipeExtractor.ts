@@ -2,6 +2,7 @@ import { useState, useCallback } from "react"
 import { useRecipeContext } from "../contexts/RecipeContext"
 import { generateId } from "../utils/format"
 import { getLanguageFullName } from "../utils/i18n"
+import { useTranslation } from "./useTranslation"
 import type { Recipe, AIProvider } from "../types/recipe"
 
 interface ExtractorState {
@@ -136,6 +137,7 @@ async function extractWithProvider(
 
 export function useRecipeExtractor() {
   const { settings } = useRecipeContext()
+  const { t } = useTranslation()
   const [state, setState] = useState<ExtractorState>({
     loading: false,
     error: null,
@@ -146,7 +148,7 @@ export function useRecipeExtractor() {
     async (url: string) => {
       const apiKey = getApiKey(settings.aiProvider, settings)
       if (!apiKey) {
-        setState({ loading: false, error: `${settings.aiProvider} API key not set`, extractedRecipe: null })
+        setState({ loading: false, error: t('ai.apiKeyNotSet').replace('{provider}', settings.aiProvider), extractedRecipe: null })
         return
       }
 
@@ -155,7 +157,7 @@ export function useRecipeExtractor() {
       try {
         const language = getLanguageFullName(settings.language)
         const content = await extractWithProvider(settings.aiProvider, apiKey, settings.aiModel, url, language)
-        if (!content) throw new Error("No response from AI")
+        if (!content) throw new Error(t('ai.noResponse'))
 
         // Extract JSON from response (handle markdown code blocks)
         let jsonStr = content.trim()
@@ -165,9 +167,9 @@ export function useRecipeExtractor() {
         const parsed = JSON.parse(jsonStr)
         const recipe: Recipe = {
           id: generateId(),
-          title: parsed.title || "Untitled Recipe",
+          title: parsed.title || t('form.untitledRecipe'),
           subtitle: parsed.subtitle || "",
-          category: parsed.category || "Uncategorized",
+          category: parsed.category || t('form.uncategorized'),
           prepTime: parsed.prepTime || 0,
           cookTime: parsed.cookTime || 0,
           servings: parsed.servings || 2,
@@ -188,12 +190,12 @@ export function useRecipeExtractor() {
       } catch (err) {
         setState({
           loading: false,
-          error: err instanceof Error ? err.message : "Failed to extract recipe",
+          error: err instanceof Error ? err.message : t('ai.extractFailed'),
           extractedRecipe: null,
         })
       }
     },
-    [settings],
+    [settings, t],
   )
 
   const reset = useCallback(() => {

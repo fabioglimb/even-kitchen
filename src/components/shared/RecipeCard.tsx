@@ -3,6 +3,7 @@ import { useRef, useState, useCallback } from "react"
 import { Card, Badge } from "even-toolkit/web"
 import { IcTrash } from "even-toolkit/web/icons/svg-icons"
 import { formatMinutes } from "../../utils/format"
+import { useTranslation } from "../../hooks/useTranslation"
 import type { Recipe } from "../../types/recipe"
 import type { TouchEvent as ReactTouchEvent } from "react"
 
@@ -17,6 +18,7 @@ interface RecipeCardProps {
 
 export function RecipeCard({ recipe, onDelete }: RecipeCardProps) {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [offset, setOffset] = useState(0)
   const [swiping, setSwiping] = useState(false)
   const startX = useRef(0)
@@ -95,7 +97,7 @@ export function RecipeCard({ recipe, onDelete }: RecipeCardProps) {
               <div className="flex items-center gap-2 mt-auto pt-2">
                 <Badge>{formatMinutes(recipe.prepTime + recipe.cookTime)}</Badge>
                 <Badge>{recipe.difficulty}</Badge>
-                <Badge>{recipe.servings} serv.</Badge>
+                <Badge>{recipe.servings} {t('card.serv')}</Badge>
               </div>
             </div>
           </div>

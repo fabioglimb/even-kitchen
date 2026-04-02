@@ -20,9 +20,9 @@ export function RecipeLibrary() {
   const showAITab = activeKey.length > 0
 
   useDrawerHeader({
-    title: 'ER Kitchen',
+    title: t('app.title'),
     right: (
-      <Button size="sm" onClick={() => navigate("/recipe/new")}>+ New</Button>
+      <Button size="sm" onClick={() => navigate("/recipe/new")}>{t('library.newBtn')}</Button>
     ),
   })
 
