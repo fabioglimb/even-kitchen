@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
+import { storageGetSync, storageSet } from "even-toolkit/storage"
 
 export interface TimerState {
   running: boolean
@@ -24,26 +25,21 @@ const STORAGE_KEY = 'even-kitchen:cooking'
 const DEFAULT_TIMER: TimerState = { running: false, remaining: 0, total: 0 }
 
 function loadCookingState(): CookingState {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      // Pause any running timers on restore (since time has passed)
-      const timers: Record<number, TimerState> = {}
-      for (const [key, val] of Object.entries(parsed.timers ?? {})) {
-        const t = val as TimerState
-        timers[Number(key)] = { ...t, running: false }
-      }
-      return { currentStepIndex: parsed.currentStepIndex ?? 0, timers }
+  const parsed = storageGetSync<{ currentStepIndex?: number; timers?: Record<string, TimerState> } | null>(STORAGE_KEY, null)
+  if (parsed) {
+    // Pause any running timers on restore (since time has passed)
+    const timers: Record<number, TimerState> = {}
+    for (const [key, val] of Object.entries(parsed.timers ?? {})) {
+      const t = val as TimerState
+      timers[Number(key)] = { ...t, running: false }
     }
-  } catch {
-    // ignore
+    return { currentStepIndex: parsed.currentStepIndex ?? 0, timers }
   }
   return { currentStepIndex: 0, timers: {} }
 }
 
 function saveCookingState(state: CookingState): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  storageSet(STORAGE_KEY, state)
 }
 
 const CookingContext = createContext<CookingContextValue | null>(null)

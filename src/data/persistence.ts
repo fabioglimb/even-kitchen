@@ -1,9 +1,16 @@
 import type { Recipe, AppSettings } from '../types/recipe'
 import { seedRecipes } from './seed-recipes'
 import { encryptValue, decryptValue } from '../utils/crypto'
+import { storageGetSync, storageSet, storageRemove } from 'even-toolkit/storage'
 
 const STORAGE_KEY_RECIPES = 'even-kitchen:recipes'
 const STORAGE_KEY_SETTINGS = 'even-kitchen:settings'
+
+export const ALL_STORAGE_KEYS = [
+  'even-kitchen:recipes',
+  'even-kitchen:settings',
+  'even-kitchen:cooking',
+]
 
 const DEFAULT_SETTINGS: AppSettings = {
   language: 'en',
@@ -15,17 +22,13 @@ const DEFAULT_SETTINGS: AppSettings = {
 }
 
 export function loadRecipes(): Recipe[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY_RECIPES)
-    if (stored) return JSON.parse(stored)
-  } catch {
-    // ignore parse errors
-  }
+  const stored = storageGetSync<Recipe[] | null>(STORAGE_KEY_RECIPES, null)
+  if (stored) return stored
   return seedRecipes
 }
 
 export function saveRecipes(recipes: Recipe[]): void {
-  localStorage.setItem(STORAGE_KEY_RECIPES, JSON.stringify(recipes))
+  storageSet(STORAGE_KEY_RECIPES, recipes)
 }
 
 /**
@@ -33,14 +36,9 @@ export function saveRecipes(recipes: Recipe[]): void {
  * API keys are encrypted — they'll be decrypted async after mount.
  */
 export function loadSettings(): AppSettings {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY_SETTINGS)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      return { ...DEFAULT_SETTINGS, ...parsed }
-    }
-  } catch {
-    // ignore parse errors
+  const stored = storageGetSync<Partial<AppSettings> | null>(STORAGE_KEY_SETTINGS, null)
+  if (stored) {
+    return { ...DEFAULT_SETTINGS, ...stored }
   }
   return { ...DEFAULT_SETTINGS }
 }
@@ -78,9 +76,9 @@ export async function saveSettingsEncrypted(settings: AppSettings): Promise<void
     anthropicApiKey: anthropic,
     deepseekApiKey: deepseek,
   }
-  localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(toStore))
+  storageSet(STORAGE_KEY_SETTINGS, toStore)
 }
 
 export function resetRecipes(): void {
-  localStorage.removeItem(STORAGE_KEY_RECIPES)
+  storageRemove(STORAGE_KEY_RECIPES)
 }

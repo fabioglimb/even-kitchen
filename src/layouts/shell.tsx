@@ -1,12 +1,15 @@
 import { DrawerShell } from 'even-toolkit/web';
 import type { SideDrawerItem } from 'even-toolkit/web';
+import { IcMenuHome, IcEditSettings } from 'even-toolkit/web/icons/svg-icons';
+
+const iconProps = { width: 18, height: 18, className: 'text-current' };
 
 const MENU_ITEMS: SideDrawerItem[] = [
-  { id: '/', label: 'Recipes', section: 'Kitchen' },
+  { id: '/', label: 'Recipes', section: 'Kitchen', icon: <IcMenuHome {...iconProps} /> },
 ];
 
 const BOTTOM_ITEMS: SideDrawerItem[] = [
-  { id: '/settings', label: 'Settings', section: 'App' },
+  { id: '/settings', label: 'Settings', icon: <IcEditSettings {...iconProps} /> },
 ];
 
 function getPageTitle(pathname: string): string {
