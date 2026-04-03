@@ -2,8 +2,8 @@
  * Client-side encryption for API keys using Web Crypto API.
  *
  * - AES-GCM encryption with a non-extractable key stored in IndexedDB
- * - Keys in localStorage are ciphertext, not plaintext
- * - Protects against physical device access / localStorage inspection
+ * - Keys persisted through bridge-backed app storage are ciphertext, not plaintext
+ * - Protects against physical device access / app-storage inspection
  * - Does NOT protect against same-origin JS (but we have no third-party scripts)
  */
 

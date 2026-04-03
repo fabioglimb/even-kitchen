@@ -1,6 +1,6 @@
 import type { Recipe, AppSettings } from '../types/recipe'
 import { seedRecipes } from './seed-recipes'
-import { storageGet, storageSet, storageRemove } from 'even-toolkit/storage'
+import { storageGet, storageSet, storageRemove } from './bridge-storage'
 
 const STORAGE_KEY_RECIPES = 'even-kitchen:recipes'
 const STORAGE_KEY_SETTINGS = 'even-kitchen:settings'

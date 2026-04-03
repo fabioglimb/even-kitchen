@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
-import { storageGet, storageSet } from "even-toolkit/storage"
+import { storageGet, storageSet } from "../data/bridge-storage"
 
 export interface TimerState {
   running: boolean
