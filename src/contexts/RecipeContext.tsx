@@ -107,6 +107,10 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   })
   const [loaded, setLoaded] = useState(false)
 
+  const persistRecipesNow = (recipes: Recipe[]) => {
+    void saveRecipes(recipes)
+  }
+
   // Load data async on mount
   useEffect(() => {
     async function init() {
@@ -143,13 +147,37 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     loaded,
     setSelectedRecipe: (recipe) => dispatch({ type: 'SET_SELECTED', recipe }),
     setCategoryFilter: (category) => dispatch({ type: 'SET_CATEGORY_FILTER', category }),
-    addRecipe: (recipe) => dispatch({ type: 'ADD_RECIPE', recipe }),
-    updateRecipe: (recipe) => dispatch({ type: 'UPDATE_RECIPE', recipe }),
-    deleteRecipe: (id) => dispatch({ type: 'DELETE_RECIPE', id }),
+    addRecipe: (recipe) => {
+      const next = [...state.recipes, recipe]
+      dispatch({ type: 'ADD_RECIPE', recipe })
+      persistRecipesNow(next)
+    },
+    updateRecipe: (recipe) => {
+      const next = state.recipes.map((r) => (r.id === recipe.id ? recipe : r))
+      dispatch({ type: 'UPDATE_RECIPE', recipe })
+      persistRecipesNow(next)
+    },
+    deleteRecipe: (id) => {
+      const next = state.recipes.filter((r) => r.id !== id)
+      dispatch({ type: 'DELETE_RECIPE', id })
+      persistRecipesNow(next)
+    },
     toggleArchive: (id) => dispatch({ type: 'TOGGLE_ARCHIVE', id }),
-    importRecipes: (recipes) => dispatch({ type: 'IMPORT_RECIPES', recipes }),
-    resetToDefaults: () => dispatch({ type: 'RESET_TO_DEFAULTS' }),
-    setSettings: (settings) => dispatch({ type: 'SET_SETTINGS', settings }),
+    importRecipes: (recipes) => {
+      const existingIds = new Set(state.recipes.map((r) => r.id))
+      const newRecipes = recipes.filter((r) => !existingIds.has(r.id))
+      const next = [...state.recipes, ...newRecipes]
+      dispatch({ type: 'IMPORT_RECIPES', recipes })
+      persistRecipesNow(next)
+    },
+    resetToDefaults: () => {
+      dispatch({ type: 'RESET_TO_DEFAULTS' })
+      persistRecipesNow(seedRecipes)
+    },
+    setSettings: (settings) => {
+      dispatch({ type: 'SET_SETTINGS', settings })
+      void saveSettingsEncrypted(settings)
+    },
   }
 
   return <RecipeContext.Provider value={value}>{children}</RecipeContext.Provider>
