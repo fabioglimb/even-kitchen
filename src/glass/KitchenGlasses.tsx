@@ -6,7 +6,7 @@ import { createScreenMapper, createIdExtractor, getHomeTiles } from 'even-toolki
 import { useRecipeContext } from '../contexts/RecipeContext';
 import { kitchenSplash } from './splash';
 import { useCookingContext } from '../contexts/CookingContext';
-import { toDisplayData, onGlassAction, type KitchenSnapshot } from './selectors';
+import { toDisplayData, toSplitData, onGlassAction, type KitchenSnapshot } from './selectors';
 import type { KitchenActions } from './shared';
 
 const deriveScreen = createScreenMapper([
@@ -90,11 +90,16 @@ export function KitchenGlasses() {
   useGlasses({
     getSnapshot,
     toDisplayData,
+    toSplit: toSplitData,
     onGlassAction: handleGlassAction,
     deriveScreen,
     appName: 'ER KITCHEN',
     splash: kitchenSplash,
-    getPageMode: (screen) => screen === 'recipe-list' ? 'home' : 'text',
+    getPageMode: (screen) => {
+      if (screen === 'recipe-list') return 'home';
+      if (screen === 'recipe-detail' || screen === 'cooking') return 'split';
+      return 'text';
+    },
     homeImageTiles: homeTiles,
   });
 

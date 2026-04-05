@@ -1,5 +1,7 @@
 import type { Recipe, AppLanguage } from '../types/recipe';
 import type { TimerState } from '../contexts/CookingContext';
+import { truncate } from 'even-toolkit/text-utils';
+import { glassHeader, renderTextPageLines } from 'even-toolkit/types';
 
 export interface KitchenSnapshot {
   recipes: Recipe[];
@@ -43,4 +45,35 @@ export function wordWrap(text: string, maxChars: number): string[] {
   }
   if (current.length > 0) lines.push(current);
   return lines;
+}
+
+export const SPLIT_LEFT_WIDTH = 26;
+export const SPLIT_RIGHT_WIDTH = 19;
+export const SPLIT_PANE_LINES = 8;
+const SPLIT_LINE_PREFIX = '  ';
+export const SPLIT_LEFT_CONTENT_WIDTH = SPLIT_LEFT_WIDTH - SPLIT_LINE_PREFIX.length;
+export const SPLIT_RIGHT_CONTENT_WIDTH = SPLIT_RIGHT_WIDTH - SPLIT_LINE_PREFIX.length;
+
+export function buildSplitHeader(title: string, actionBar?: string): string {
+  return renderTextPageLines(glassHeader(title, actionBar));
+}
+
+export function buildPaneText(lines: string[], width: number, scrollPos = 0, slots = SPLIT_PANE_LINES): string {
+  const contentWidth = Math.max(1, width - SPLIT_LINE_PREFIX.length);
+  const normalized = lines.flatMap((entry) => {
+    if (!entry) return [''];
+    return wordWrap(entry, contentWidth);
+  });
+
+  const start = Math.max(0, Math.min(scrollPos, Math.max(0, normalized.length - slots)));
+  const visible = normalized.slice(start, start + slots);
+
+  while (visible.length < slots) visible.push('');
+
+  if (start > 0 && visible.length > 0) visible[0] = '▲';
+  if (start + slots < normalized.length && visible.length > 0) visible[visible.length - 1] = '▼';
+
+  return visible
+    .map((entry) => (entry ? `${SPLIT_LINE_PREFIX}${truncate(entry, contentWidth)}` : ''))
+    .join('\n');
 }

@@ -84,14 +84,14 @@ const translations: Record<string, Record<AppLanguage, string>> = {
   'form.ingredient': { en: 'Ingredient', it: 'Ingrediente', es: 'Ingrediente', fr: 'Ingredient', de: 'Zutat', pt: 'Ingrediente', ja: '材料', zh: '食材', ko: '재료', ru: 'Ингредиент' },
   'form.qty': { en: 'Qty', it: 'Qtà', es: 'Cant', fr: 'Qté', de: 'Menge', pt: 'Qtd', ja: '量', zh: '数量', ko: '양', ru: 'Кол-во' },
   'form.unit': { en: 'Unit', it: 'Unità', es: 'Unidad', fr: 'Unité', de: 'Einheit', pt: 'Unidade', ja: '単位', zh: '单位', ko: '단위', ru: 'Ед.' },
-  'form.addIngredient': { en: '+ Add Ingredient', it: '+ Aggiungi Ingrediente', es: '+ Anadir Ingrediente', fr: '+ Ajouter un Ingredient', de: '+ Zutat hinzufugen', pt: '+ Adicionar Ingrediente', ja: '+ 材料を追加', zh: '+ 添加食材', ko: '+ 재료 추가', ru: '+ Добавить ингредиент' },
+  'form.addIngredient': { en: 'Add Ingredient', it: 'Aggiungi Ingrediente', es: 'Anadir Ingrediente', fr: 'Ajouter un Ingredient', de: 'Zutat hinzufugen', pt: 'Adicionar Ingrediente', ja: '材料を追加', zh: '添加食材', ko: '재료 추가', ru: 'Добавить ингредиент' },
   'form.steps': { en: 'Steps', it: 'Passaggi', es: 'Pasos', fr: 'Etapes', de: 'Schritte', pt: 'Passos', ja: 'ステップ', zh: '步骤', ko: '단계', ru: 'Шаги' },
   'form.step': { en: 'Step', it: 'Passaggio', es: 'Paso', fr: 'Etape', de: 'Schritt', pt: 'Passo', ja: 'ステップ', zh: '步骤', ko: '단계', ru: 'Шаг' },
   'form.title': { en: 'Title', it: 'Titolo', es: 'Titulo', fr: 'Titre', de: 'Titel', pt: 'Titulo', ja: 'タイトル', zh: '标题', ko: '제목', ru: 'Заголовок' },
   'form.stepTitle': { en: 'Step title', it: 'Titolo del passaggio', es: 'Titulo del paso', fr: 'Titre de l\'etape', de: 'Schritt-Titel', pt: 'Titulo do passo', ja: 'ステップのタイトル', zh: '步骤标题', ko: '단계 제목', ru: 'Заголовок шага' },
   'form.instructions': { en: 'Instructions', it: 'Istruzioni', es: 'Instrucciones', fr: 'Instructions', de: 'Anleitung', pt: 'Instrucoes', ja: '手順', zh: '说明', ko: '설명', ru: 'Инструкции' },
-  'form.timerSeconds': { en: 'Timer (seconds, optional)', it: 'Timer (secondi, opzionale)', es: 'Temporizador (segundos, opcional)', fr: 'Minuteur (secondes, optionnel)', de: 'Timer (Sekunden, optional)', pt: 'Timer (segundos, opcional)', ja: 'タイマー（秒、任意）', zh: '计时器（秒，可选）', ko: '타이머 (초, 선택)', ru: 'Таймер (секунды, необязательно)' },
-  'form.addStep': { en: '+ Add Step', it: '+ Aggiungi Passaggio', es: '+ Anadir Paso', fr: '+ Ajouter une Etape', de: '+ Schritt hinzufugen', pt: '+ Adicionar Passo', ja: '+ ステップ追加', zh: '+ 添加步骤', ko: '+ 단계 추가', ru: '+ Добавить шаг' },
+  'form.timerSeconds': { en: 'Timer (sec)', it: 'Timer (sec)', es: 'Temporizador (seg)', fr: 'Minuteur (sec)', de: 'Timer (Sek)', pt: 'Timer (seg)', ja: 'タイマー（秒）', zh: '计时器（秒）', ko: '타이머 (초)', ru: 'Таймер (сек)' },
+  'form.addStep': { en: 'Add Step', it: 'Aggiungi Passaggio', es: 'Anadir Paso', fr: 'Ajouter une Etape', de: 'Schritt hinzufugen', pt: 'Adicionar Passo', ja: 'ステップ追加', zh: '添加步骤', ko: '단계 추가', ru: 'Добавить шаг' },
   'form.saveChanges': { en: 'Save Changes', it: 'Salva Modifiche', es: 'Guardar Cambios', fr: 'Enregistrer', de: 'Anderungen speichern', pt: 'Salvar Alteracoes', ja: '変更を保存', zh: '保存更改', ko: '변경 저장', ru: 'Сохранить изменения' },
   'form.createRecipe': { en: 'Create Recipe', it: 'Crea Ricetta', es: 'Crear Receta', fr: 'Creer la Recette', de: 'Rezept erstellen', pt: 'Criar Receita', ja: 'レシピ作成', zh: '创建食谱', ko: '레시피 만들기', ru: 'Создать рецепт' },
 
@@ -162,6 +162,8 @@ const translations: Record<string, Record<AppLanguage, string>> = {
 
   // Glass Display
   'glass.timer': { en: 'Timer', it: 'Timer', es: 'Temporizador', fr: 'Minuteur', de: 'Timer', pt: 'Temporizador', ja: 'タイマー', zh: '计时器', ko: '타이머', ru: 'Таймер' },
+  'glass.start': { en: 'Start', it: 'Inizia', es: 'Iniciar', fr: 'Demarrer', de: 'Start', pt: 'Iniciar', ja: '開始', zh: '开始', ko: '시작', ru: 'Старт' },
+  'glass.next': { en: 'Next', it: 'Prossimo', es: 'Siguiente', fr: 'Suivant', de: 'Nachste', pt: 'Proximo', ja: '次', zh: '下一步', ko: '다음', ru: 'Далее' },
   'glass.scroll': { en: 'Scroll', it: 'Scorri', es: 'Desplazar', fr: 'Defiler', de: 'Scrollen', pt: 'Rolar', ja: 'スクロール', zh: '滚动', ko: '스크롤', ru: 'Прокрутка' },
   'glass.steps': { en: 'Steps', it: 'Passi', es: 'Pasos', fr: 'Etapes', de: 'Schritte', pt: 'Passos', ja: 'ステップ', zh: '步骤', ko: '단계', ru: 'Шаги' },
   'glass.finish': { en: 'Finish', it: 'Fine', es: 'Finalizar', fr: 'Terminer', de: 'Fertig', pt: 'Finalizar', ja: '完了', zh: '完成', ko: '완료', ru: 'Завершить' },

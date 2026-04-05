@@ -4,6 +4,7 @@ import { useRecipeContext } from "../contexts/RecipeContext"
 import { useRecipes } from "../hooks/useRecipes"
 import { RecipeCard } from "../components/shared/RecipeCard"
 import { CategoryFilter, Button, useDrawerHeader } from "even-toolkit/web"
+import { IcEditAdd } from "even-toolkit/web/icons/svg-icons"
 import { AIImportTab } from "../components/shared/AIImportTab"
 import { useTranslation } from "../hooks/useTranslation"
 
@@ -22,7 +23,9 @@ export function RecipeLibrary() {
   useDrawerHeader({
     title: t('app.title'),
     right: (
-      <Button size="sm" onClick={() => navigate("/recipe/new")}>{t('library.newBtn')}</Button>
+      <Button size="sm" onClick={() => navigate("/recipe/new")} aria-label={t('form.newRecipe')}>
+        <IcEditAdd width={16} height={16} />
+      </Button>
     ),
   })
 

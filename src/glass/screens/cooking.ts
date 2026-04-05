@@ -1,5 +1,6 @@
 import type { GlassScreen } from 'even-toolkit/glass-screen-router';
 import { line, glassHeader } from 'even-toolkit/types';
+import type { SplitData } from 'even-toolkit/types';
 import { renderTimerLines } from 'even-toolkit/timer-display';
 import { buildActionBar } from 'even-toolkit/action-bar';
 import { truncate, applyScrollIndicators } from 'even-toolkit/text-utils';
@@ -10,7 +11,16 @@ import type { Recipe } from '../../types/recipe';
 import type { TimerState } from '../../contexts/CookingContext';
 import type { AppLanguage } from '../../types/recipe';
 import type { KitchenSnapshot, KitchenActions } from '../shared';
-import { findRecipe, wordWrap } from '../shared';
+import {
+  findRecipe,
+  wordWrap,
+  buildSplitHeader,
+  buildPaneText,
+  SPLIT_LEFT_WIDTH,
+  SPLIT_RIGHT_WIDTH,
+  SPLIT_LEFT_CONTENT_WIDTH,
+  SPLIT_RIGHT_CONTENT_WIDTH,
+} from '../shared';
 import { t } from '../../utils/i18n';
 
 export const cookMode = createModeEncoder({
@@ -19,10 +29,10 @@ export const cookMode = createModeEncoder({
   steps: 200,
 });
 
-function getCookingButtons(hasTimer: boolean, isLastStep: boolean, lang: AppLanguage): string[] {
+function getCookingButtons(hasTimer: boolean, hasScrollableContent: boolean, isLastStep: boolean, lang: AppLanguage): string[] {
   const btns: string[] = [];
   if (hasTimer) btns.push(t('glass.timer', lang));
-  btns.push(t('glass.scroll', lang));
+  if (hasScrollableContent) btns.push(t('glass.scroll', lang));
   btns.push(t('glass.steps', lang));
   if (isLastStep) btns.push(t('glass.finish', lang));
   return btns;
@@ -51,15 +61,65 @@ function buildStepContent(recipe: Recipe, stepIndex: number, timers: Record<numb
   return items;
 }
 
-export function cookingContentLineCount(recipe: Recipe, stepIndex: number, timers: Record<number, TimerState>): number {
+function buildInstructionLines(recipe: Recipe, stepIndex: number): string[] {
   const step = recipe.steps[stepIndex];
-  const content = buildStepContent(recipe, stepIndex, timers);
-  const timerLineCount = step?.timerSeconds
-    ? renderTimerLines(getStepTimer(step, timers, stepIndex)).length + 1
-    : 0;
-  const instrCount = content.length - timerLineCount;
-  const instrSlots = G2_TEXT_LINES - 3 - timerLineCount;
-  return Math.max(0, instrCount - instrSlots);
+  if (!step?.instructions) return [];
+  return wordWrap(step.instructions, SPLIT_LEFT_CONTENT_WIDTH);
+}
+
+function buildTimerPaneLines(recipe: Recipe, stepIndex: number, timers: Record<number, TimerState>, lang: AppLanguage): string[] {
+  const step = recipe.steps[stepIndex];
+  if (!step) return [];
+  const nextStep = recipe.steps[stepIndex + 1];
+  const nextLines = nextStep
+    ? wordWrap(nextStep.title || nextStep.instructions || t('glass.finish', lang), SPLIT_RIGHT_CONTENT_WIDTH)
+    : [];
+
+  if (!step.timerSeconds) {
+    return [
+      nextStep ? `• ${t('glass.next', lang).toUpperCase()}` : `• ${t('glass.finish', lang).toUpperCase()}`,
+      ...nextLines,
+    ];
+  }
+
+  const timer = getStepTimer(step, timers, stepIndex);
+  const header = renderTimerLines(timer, 10, SPLIT_RIGHT_WIDTH);
+  return [
+    `• ${t('glass.timer', lang).toUpperCase()}`,
+    '',
+    ...header,
+    '',
+    nextStep ? `• ${t('glass.next', lang).toUpperCase()}` : `• ${t('glass.finish', lang).toUpperCase()}`,
+    ...nextLines,
+  ];
+}
+
+export function cookingContentLineCount(recipe: Recipe, stepIndex: number): number {
+  return Math.max(0, buildInstructionLines(recipe, stepIndex).length - 8);
+}
+
+export function buildCookingSplit(snapshot: KitchenSnapshot, nav: { highlightedIndex: number }): SplitData {
+  const recipe = findRecipe(snapshot);
+  if (!recipe) {
+    return { header: buildSplitHeader('Cooking'), left: '', right: '' };
+  }
+  const { currentStepIndex, timers, flashPhase, language: lang } = snapshot;
+  const step = recipe.steps[currentStepIndex];
+  const isLastStep = currentStepIndex >= recipe.steps.length - 1;
+  const hasTimer = Boolean(step?.timerSeconds);
+  const hasScrollableContent = cookingContentLineCount(recipe, currentStepIndex) > 0;
+  const buttons = getCookingButtons(hasTimer, hasScrollableContent, isLastStep, lang);
+  const mode = cookMode.getMode(nav.highlightedIndex);
+  const selectedButtonIndex = mode === 'buttons' ? clampIndex(nav.highlightedIndex, buttons.length) : -1;
+
+  return {
+    header: buildSplitHeader(
+      `${currentStepIndex + 1}/${recipe.steps.length} ${step?.title ?? ''}`,
+      buildActionBar(buttons, selectedButtonIndex, mode === 'scroll' ? t('glass.scroll', lang) : mode === 'steps' ? t('glass.steps', lang) : null, flashPhase),
+    ),
+    left: buildPaneText(buildInstructionLines(recipe, currentStepIndex), SPLIT_LEFT_WIDTH, mode === 'scroll' ? cookMode.getOffset(nav.highlightedIndex) : 0),
+    right: buildPaneText(buildTimerPaneLines(recipe, currentStepIndex, timers, lang), SPLIT_RIGHT_WIDTH, 0),
+  };
 }
 
 export const cookingScreen: GlassScreen<KitchenSnapshot, KitchenActions> = {
@@ -71,12 +131,13 @@ export const cookingScreen: GlassScreen<KitchenSnapshot, KitchenActions> = {
     const step = recipe.steps[currentStepIndex];
     const hasTimer = Boolean(step?.timerSeconds);
     const isLastStep = currentStepIndex >= recipe.steps.length - 1;
-    const buttons = getCookingButtons(hasTimer, isLastStep, lang);
-    const btnIdx = clampIndex(nav.highlightedIndex, buttons.length);
+    const hasScrollableContent = cookingContentLineCount(recipe, currentStepIndex) > 0;
+    const buttons = getCookingButtons(hasTimer, hasScrollableContent, isLastStep, lang);
+    const selectedButtonIndex = mode === 'buttons' ? clampIndex(nav.highlightedIndex, buttons.length) : -1;
 
-    const stepLabel = `${t('cooking.step', lang)} ${currentStepIndex + 1}/${recipe.steps.length}: ${truncate(step?.title ?? '', 20)}`;
+    const stepLabel = `${currentStepIndex + 1}/${recipe.steps.length} ${truncate(step?.title ?? '', 24)}`;
     const activeLabel = mode === 'scroll' ? t('glass.scroll', lang) : mode === 'steps' ? t('glass.steps', lang) : null;
-    const actionBar = buildActionBar(buttons, btnIdx, activeLabel, flashPhase);
+    const actionBar = buildActionBar(buttons, selectedButtonIndex, activeLabel, flashPhase);
 
     const content = buildStepContent(recipe, currentStepIndex, timers);
     const timerLineCount = step?.timerSeconds
@@ -110,7 +171,8 @@ export const cookingScreen: GlassScreen<KitchenSnapshot, KitchenActions> = {
     const hasTimer = Boolean(step?.timerSeconds);
     const isLastStep = snapshot.currentStepIndex >= recipe.steps.length - 1;
     const lang = snapshot.language;
-    const buttons = getCookingButtons(hasTimer, isLastStep, lang);
+    const hasScrollableContent = cookingContentLineCount(recipe, snapshot.currentStepIndex) > 0;
+    const buttons = getCookingButtons(hasTimer, hasScrollableContent, isLastStep, lang);
 
     if (mode === 'buttons') {
       if (action.type === 'HIGHLIGHT_MOVE') {
@@ -133,7 +195,7 @@ export const cookingScreen: GlassScreen<KitchenSnapshot, KitchenActions> = {
     if (mode === 'scroll') {
       if (action.type === 'HIGHLIGHT_MOVE') {
         const offset = cookMode.getOffset(nav.highlightedIndex);
-        const maxOffset = cookingContentLineCount(recipe, snapshot.currentStepIndex, snapshot.timers);
+        const maxOffset = cookingContentLineCount(recipe, snapshot.currentStepIndex);
         return { ...nav, highlightedIndex: cookMode.encode('scroll', moveHighlight(offset, action.direction, maxOffset)) };
       }
       if (action.type === 'SELECT_HIGHLIGHTED' || action.type === 'GO_BACK') {
