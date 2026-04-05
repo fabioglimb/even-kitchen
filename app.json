@@ -1,0 +1,18 @@
+{
+  "package_id": "com.evenkitchen.g2",
+  "edition": "202601",
+  "name": "ER Kitchen",
+  "version": "0.1.9",
+  "min_sdk_version": "0.0.9",
+  "min_app_version": "2.0.0",
+  "entrypoint": "index.html",
+  "permissions": [
+    {
+      "name": "network",
+      "desc": "Used for AI-powered recipe import from URLs via OpenAI, Anthropic, or Google APIs"
+    }
+  ],
+  "supported_languages": [
+    "en"
+  ]
+}
