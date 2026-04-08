@@ -1,4 +1,5 @@
 import type { GlassAction, GlassNavState } from 'even-toolkit/types';
+import { line } from 'even-toolkit/types';
 import type { GlassScreen } from 'even-toolkit/glass-screen-router';
 import { moveHighlight } from 'even-toolkit/glass-nav';
 import { buildScrollableList } from 'even-toolkit/glass-display-builders';
@@ -8,14 +9,15 @@ import { glassRecipes } from '../shared';
 
 export const recipeListScreen: GlassScreen<KitchenSnapshot, KitchenActions> = {
   display(snapshot, nav) {
-    return {
-      lines: buildScrollableList({
-        items: glassRecipes(snapshot),
-        highlightedIndex: nav.highlightedIndex,
-        maxVisible: 5,
-        formatter: (r) => truncate(r.title, 54),
-      }),
-    };
+    const header = line('◆  E R   K I T C H E N  ◆', 'normal');
+    const sep = line('', 'separator');
+    const menuLines = buildScrollableList({
+      items: glassRecipes(snapshot),
+      highlightedIndex: nav.highlightedIndex,
+      maxVisible: 7,
+      formatter: (r) => truncate(r.title, 54),
+    });
+    return { lines: [header, sep, ...menuLines] };
   },
 
   action(action, nav, snapshot, ctx) {

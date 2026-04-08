@@ -18,7 +18,7 @@ import {
 import { t } from '../../utils/i18n';
 
 function ingredientLines(recipe: Recipe): string[] {
-  return recipe.ingredients.map((ing) => truncate(`■ ${`${ing.amount} ${ing.unit} ${ing.name}`.trim()}`, 54));
+  return recipe.ingredients.map((ing) => truncate(`• ${`${ing.amount} ${ing.unit} ${ing.name}`.trim()}`, 54));
 }
 
 function recipeDetailLines(recipe: Recipe, lang: AppLanguage): string[] {
@@ -28,7 +28,7 @@ function recipeDetailLines(recipe: Recipe, lang: AppLanguage): string[] {
   items.push('');
   items.push(t('recipe.ingredients', lang).toUpperCase());
   recipe.ingredients.forEach((ing) => {
-    items.push(truncate(`■ ${`${ing.amount} ${ing.unit} ${ing.name}`.trim()}`, 54));
+    items.push(truncate(`• ${`${ing.amount} ${ing.unit} ${ing.name}`.trim()}`, 54));
   });
   items.push('');
   items.push(t('recipe.steps', lang).toUpperCase());
@@ -49,11 +49,11 @@ export function recipeDetailLineCount(recipe: Recipe): number {
 function recipeSummaryLines(recipe: Recipe, lang: AppLanguage): string[] {
   const totalMinutes = recipe.prepTime + recipe.cookTime;
   return [
-    `■ ${recipe.difficulty}`,
-    `■ ${totalMinutes} min`,
-    `■ ${recipe.servings} ${t('recipe.servings', lang)}`,
-    `■ ${recipe.ingredients.length} ${t('recipe.ingredients', lang).toLowerCase()}`,
-    `■ ${recipe.steps.length} ${t('recipe.steps', lang).toLowerCase()}`,
+    `◆ ${recipe.difficulty}`,
+    `◆ ${totalMinutes} min`,
+    `◆ ${recipe.servings} ${t('recipe.servings', lang)}`,
+    `◆ ${recipe.ingredients.length} ${t('recipe.ingredients', lang).toLowerCase()}`,
+    `◆ ${recipe.steps.length} ${t('recipe.steps', lang).toLowerCase()}`,
   ];
 }
 
