@@ -77,7 +77,7 @@ function buildTimerPaneLines(recipe: Recipe, stepIndex: number, timers: Record<n
 
   if (!step.timerSeconds) {
     return [
-      nextStep ? `• ${t('glass.next', lang).toUpperCase()}` : `• ${t('glass.finish', lang).toUpperCase()}`,
+      nextStep ? `■ ${t('glass.next', lang).toUpperCase()}` : `■ ${t('glass.finish', lang).toUpperCase()}`,
       ...nextLines,
     ];
   }
@@ -85,11 +85,11 @@ function buildTimerPaneLines(recipe: Recipe, stepIndex: number, timers: Record<n
   const timer = getStepTimer(step, timers, stepIndex);
   const header = renderTimerLines(timer, 10, SPLIT_RIGHT_WIDTH);
   return [
-    `• ${t('glass.timer', lang).toUpperCase()}`,
+    `■ ${t('glass.timer', lang).toUpperCase()}`,
     '',
     ...header,
     '',
-    nextStep ? `• ${t('glass.next', lang).toUpperCase()}` : `• ${t('glass.finish', lang).toUpperCase()}`,
+    nextStep ? `■ ${t('glass.next', lang).toUpperCase()}` : `■ ${t('glass.finish', lang).toUpperCase()}`,
     ...nextLines,
   ];
 }
