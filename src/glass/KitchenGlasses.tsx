@@ -1,10 +1,8 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useGlasses } from 'even-toolkit/useGlasses';
-import { useFlashPhase } from 'even-toolkit/useFlashPhase';
-import { createScreenMapper, createIdExtractor, getHomeTiles } from 'even-toolkit/glass-router';
+import { createScreenMapper, createIdExtractor } from 'even-toolkit/glass-router';
 import { useRecipeContext } from '../contexts/RecipeContext';
-import { kitchenSplash } from './splash';
 import { useCookingContext } from '../contexts/CookingContext';
 import { toDisplayData, toSplitData, onGlassAction, type KitchenSnapshot } from './selectors';
 import type { KitchenActions } from './shared';
@@ -18,15 +16,11 @@ const deriveScreen = createScreenMapper([
 
 const extractRecipeId = createIdExtractor(/^\/recipe\/([^/]+)/);
 
-const homeTiles = getHomeTiles(kitchenSplash);
-
 export function KitchenGlasses() {
   const { recipes, settings } = useRecipeContext();
   const { currentStepIndex, setCurrentStepIndex, timers, getTimer, setStepTimer, resetAllTimers } = useCookingContext();
   const navigate = useNavigate();
   const location = useLocation();
-  const isCooking = deriveScreen(location.pathname) === 'cooking';
-  const flashPhase = useFlashPhase(isCooking);
 
   const currentRecipeId = extractRecipeId(location.pathname);
 
@@ -39,7 +33,7 @@ export function KitchenGlasses() {
     currentRecipeId,
     currentStepIndex,
     timers,
-    flashPhase,
+    flashPhase: false,
     language: settings.language,
   };
   snapshotRef.current = snapshot;
@@ -94,13 +88,11 @@ export function KitchenGlasses() {
     onGlassAction: handleGlassAction,
     deriveScreen,
     appName: 'ER KITCHEN',
-    splash: kitchenSplash,
     getPageMode: (screen) => {
       if (screen === 'recipe-list') return 'home';
       if (screen === 'recipe-detail' || screen === 'cooking') return 'split';
       return 'text';
     },
-    homeImageTiles: homeTiles,
   });
 
   return null;
