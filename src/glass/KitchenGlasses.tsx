@@ -17,7 +17,7 @@ const deriveScreen = createScreenMapper([
 const extractRecipeId = createIdExtractor(/^\/recipe\/([^/]+)/);
 
 export function KitchenGlasses() {
-  const { recipes, settings } = useRecipeContext();
+  const { recipes, settings, favoriteIds } = useRecipeContext();
   const { currentStepIndex, setCurrentStepIndex, timers, getTimer, setStepTimer, resetAllTimers } = useCookingContext();
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,6 +35,7 @@ export function KitchenGlasses() {
     timers,
     flashPhase: false,
     language: settings.language,
+    favoriteIds,
   };
   snapshotRef.current = snapshot;
 

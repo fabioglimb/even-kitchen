@@ -1,7 +1,7 @@
 {
   "name": "even-kitchen",
   "private": true,
-  "version": "0.1.20",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173 --host",
@@ -10,10 +10,9 @@
   },
   "dependencies": {
     "@evenrealities/even_hub_sdk": "^0.0.9",
-    "@jappyjan/even-better-sdk": "^0.0.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.0",
-    "even-toolkit": "^1.6.4",
+    "even-toolkit": "^1.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "^7.0.0",

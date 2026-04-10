@@ -16,11 +16,12 @@ import {
   wordWrap,
   buildSplitHeader,
   buildPaneText,
-  SPLIT_LEFT_WIDTH,
-  SPLIT_RIGHT_WIDTH,
-  SPLIT_LEFT_CONTENT_WIDTH,
-  SPLIT_RIGHT_CONTENT_WIDTH,
 } from '../shared';
+
+const COOK_LEFT_WIDTH = 32;
+const COOK_RIGHT_WIDTH = 24;
+const COOK_LEFT_CONTENT_WIDTH = COOK_LEFT_WIDTH - 2;
+const COOK_RIGHT_CONTENT_WIDTH = COOK_RIGHT_WIDTH - 2;
 import { t } from '../../utils/i18n';
 
 export const cookMode = createModeEncoder({
@@ -64,7 +65,7 @@ function buildStepContent(recipe: Recipe, stepIndex: number, timers: Record<numb
 function buildInstructionLines(recipe: Recipe, stepIndex: number): string[] {
   const step = recipe.steps[stepIndex];
   if (!step?.instructions) return [];
-  return wordWrap(step.instructions, SPLIT_LEFT_CONTENT_WIDTH);
+  return wordWrap(step.instructions, COOK_LEFT_CONTENT_WIDTH);
 }
 
 function buildTimerPaneLines(recipe: Recipe, stepIndex: number, timers: Record<number, TimerState>, lang: AppLanguage): string[] {
@@ -72,7 +73,7 @@ function buildTimerPaneLines(recipe: Recipe, stepIndex: number, timers: Record<n
   if (!step) return [];
   const nextStep = recipe.steps[stepIndex + 1];
   const nextLines = nextStep
-    ? wordWrap(nextStep.title || nextStep.instructions || t('glass.finish', lang), SPLIT_RIGHT_CONTENT_WIDTH)
+    ? wordWrap(nextStep.title || nextStep.instructions || t('glass.finish', lang), COOK_RIGHT_CONTENT_WIDTH)
     : [];
 
   if (!step.timerSeconds) {
@@ -83,11 +84,11 @@ function buildTimerPaneLines(recipe: Recipe, stepIndex: number, timers: Record<n
   }
 
   const timer = getStepTimer(step, timers, stepIndex);
-  const header = renderTimerLines(timer, 10, SPLIT_RIGHT_WIDTH);
+  const timerLines = renderTimerLines(timer, 10, COOK_RIGHT_WIDTH);
   return [
     `◆ ${t('glass.timer', lang).toUpperCase()}`,
     '',
-    ...header,
+    ...timerLines,
     '',
     nextStep ? `▶ ${t('glass.next', lang).toUpperCase()}` : `▶ ${t('glass.finish', lang).toUpperCase()}`,
     ...nextLines,
@@ -101,7 +102,7 @@ export function cookingContentLineCount(recipe: Recipe, stepIndex: number): numb
 export function buildCookingSplit(snapshot: KitchenSnapshot, nav: { highlightedIndex: number }): SplitData {
   const recipe = findRecipe(snapshot);
   if (!recipe) {
-    return { header: buildSplitHeader('Cooking'), left: '', right: '' };
+    return { header: buildSplitHeader('Cooking'), panes: ['', ''] };
   }
   const { currentStepIndex, timers, flashPhase, language: lang } = snapshot;
   const step = recipe.steps[currentStepIndex];
@@ -117,8 +118,10 @@ export function buildCookingSplit(snapshot: KitchenSnapshot, nav: { highlightedI
       `${currentStepIndex + 1}/${recipe.steps.length} ${step?.title ?? ''}`,
       buildActionBar(buttons, selectedButtonIndex, mode === 'scroll' ? t('glass.scroll', lang) : mode === 'steps' ? t('glass.steps', lang) : null, flashPhase),
     ),
-    left: buildPaneText(buildInstructionLines(recipe, currentStepIndex), SPLIT_LEFT_WIDTH, mode === 'scroll' ? cookMode.getOffset(nav.highlightedIndex) : 0),
-    right: buildPaneText(buildTimerPaneLines(recipe, currentStepIndex, timers, lang), SPLIT_RIGHT_WIDTH, 0),
+    panes: [
+      buildPaneText(buildInstructionLines(recipe, currentStepIndex), COOK_LEFT_WIDTH, mode === 'scroll' ? cookMode.getOffset(nav.highlightedIndex) : 0),
+      buildPaneText(buildTimerPaneLines(recipe, currentStepIndex, timers, lang), COOK_RIGHT_WIDTH, 0),
+    ],
   };
 }
 

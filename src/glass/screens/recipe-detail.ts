@@ -11,11 +11,12 @@ import {
   wordWrap,
   buildSplitHeader,
   buildPaneText,
-  SPLIT_LEFT_WIDTH,
-  SPLIT_RIGHT_WIDTH,
-  SPLIT_LEFT_CONTENT_WIDTH,
 } from '../shared';
 import { t } from '../../utils/i18n';
+
+const DETAIL_LEFT_WIDTH = 32;
+const DETAIL_RIGHT_WIDTH = 24;
+const DETAIL_CONTENT_WIDTH = DETAIL_LEFT_WIDTH - 2;
 
 function ingredientLines(recipe: Recipe): string[] {
   return recipe.ingredients.map((ing) => truncate(`• ${`${ing.amount} ${ing.unit} ${ing.name}`.trim()}`, 54));
@@ -42,14 +43,21 @@ function recipeDetailLines(recipe: Recipe, lang: AppLanguage): string[] {
 }
 
 export function recipeDetailLineCount(recipe: Recipe): number {
-  const contentLength = ingredientLines(recipe).flatMap((line) => wordWrap(line, SPLIT_LEFT_CONTENT_WIDTH)).length;
+  const contentLength = ingredientLines(recipe).flatMap((line) => wordWrap(line, DETAIL_CONTENT_WIDTH)).length;
   return Math.max(0, contentLength - 8);
+}
+
+function difficultySpades(difficulty: string): string {
+  const d = difficulty.toLowerCase();
+  if (d === 'easy' || d === 'beginner') return `${difficulty} ♠`;
+  if (d === 'hard' || d === 'advanced') return `${difficulty} ♠♠♠`;
+  return `${difficulty} ♠♠`;
 }
 
 function recipeSummaryLines(recipe: Recipe, lang: AppLanguage): string[] {
   const totalMinutes = recipe.prepTime + recipe.cookTime;
   return [
-    `◆ ${recipe.difficulty}`,
+    `◆ ${difficultySpades(recipe.difficulty)}`,
     `◆ ${totalMinutes} min`,
     `◆ ${recipe.servings} ${t('recipe.servings', lang)}`,
     `◆ ${recipe.ingredients.length} ${t('recipe.ingredients', lang).toLowerCase()}`,
@@ -60,13 +68,15 @@ function recipeSummaryLines(recipe: Recipe, lang: AppLanguage): string[] {
 export function buildRecipeDetailSplit(snapshot: KitchenSnapshot, nav: { highlightedIndex: number }): SplitData {
   const recipe = findRecipe(snapshot);
   if (!recipe) {
-    return { header: buildSplitHeader('Recipe'), left: '', right: '' };
+    return { header: buildSplitHeader('Recipe'), panes: ['', ''] };
   }
 
   return {
     header: buildSplitHeader(recipe.title, buildStaticActionBar([t('glass.start', snapshot.language)], 0)),
-    left: buildPaneText(ingredientLines(recipe), SPLIT_LEFT_WIDTH, nav.highlightedIndex),
-    right: buildPaneText(recipeSummaryLines(recipe, snapshot.language), SPLIT_RIGHT_WIDTH, 0),
+    panes: [
+      buildPaneText(ingredientLines(recipe), DETAIL_LEFT_WIDTH, nav.highlightedIndex),
+      buildPaneText(recipeSummaryLines(recipe, snapshot.language), DETAIL_RIGHT_WIDTH, 0),
+    ],
   };
 }
 

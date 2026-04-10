@@ -10,7 +10,7 @@ import { useTranslation } from "../hooks/useTranslation"
 
 export function RecipeLibrary() {
   const navigate = useNavigate()
-  const { categories, categoryFilter, setCategoryFilter, settings, deleteRecipe } = useRecipeContext()
+  const { categories, categoryFilter, setCategoryFilter, settings, deleteRecipe, favoriteIds, toggleFavorite } = useRecipeContext()
   const recipes = useRecipes(categoryFilter)
   const [activeTab, setActiveTab] = useState<"library" | "ai-import">("library")
 
@@ -64,7 +64,7 @@ export function RecipeLibrary() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
             {recipes.map((recipe) => (
-              <RecipeCard key={recipe.id} recipe={recipe} onDelete={() => deleteRecipe(recipe.id)} />
+              <RecipeCard key={recipe.id} recipe={recipe} isFavorite={favoriteIds.includes(recipe.id)} onToggleFavorite={() => toggleFavorite(recipe.id)} onDelete={() => deleteRecipe(recipe.id)} />
             ))}
           </div>
 

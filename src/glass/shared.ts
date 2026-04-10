@@ -10,6 +10,7 @@ export interface KitchenSnapshot {
   timers: Record<number, TimerState>;
   flashPhase: boolean;
   language: AppLanguage;
+  favoriteIds: string[];
 }
 
 export interface KitchenActions {
@@ -25,7 +26,13 @@ export function findRecipe(snapshot: KitchenSnapshot): Recipe | null {
 }
 
 export function glassRecipes(snapshot: KitchenSnapshot): Recipe[] {
-  return snapshot.recipes.filter((r) => !r.archived);
+  const active = snapshot.recipes.filter((r) => !r.archived);
+  const favSet = new Set(snapshot.favoriteIds);
+  return [...active].sort((a, b) => {
+    const aFav = favSet.has(a.id) ? 0 : 1;
+    const bFav = favSet.has(b.id) ? 0 : 1;
+    return aFav - bFav;
+  });
 }
 
 /** Word-wrap text to fit within a character width. */
@@ -47,12 +54,8 @@ export function wordWrap(text: string, maxChars: number): string[] {
   return lines;
 }
 
-export const SPLIT_LEFT_WIDTH = 26;
-export const SPLIT_RIGHT_WIDTH = 19;
 export const SPLIT_PANE_LINES = 8;
 const SPLIT_LINE_PREFIX = '  ';
-export const SPLIT_LEFT_CONTENT_WIDTH = SPLIT_LEFT_WIDTH - SPLIT_LINE_PREFIX.length;
-export const SPLIT_RIGHT_CONTENT_WIDTH = SPLIT_RIGHT_WIDTH - SPLIT_LINE_PREFIX.length;
 
 export function buildSplitHeader(title: string, actionBar?: string): string {
   return renderTextPageLines(glassHeader(title, actionBar));

@@ -13,10 +13,12 @@ const SWIPE_THRESHOLD = 40
 
 interface RecipeCardProps {
   recipe: Recipe
+  isFavorite?: boolean
+  onToggleFavorite?: () => void
   onDelete?: () => void
 }
 
-export function RecipeCard({ recipe, onDelete }: RecipeCardProps) {
+export function RecipeCard({ recipe, isFavorite, onToggleFavorite, onDelete }: RecipeCardProps) {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [offset, setOffset] = useState(0)
@@ -86,10 +88,19 @@ export function RecipeCard({ recipe, onDelete }: RecipeCardProps) {
           onClick={() => navigate(`/recipe/${recipe.id}`)}
         >
           <div className="flex flex-col h-full">
-            <div className="h-32 flex items-center justify-center text-6xl bg-surface-light">
+            <div className="relative h-32 flex items-center justify-center text-6xl bg-surface-light">
               <span style={{ fontFamily: EMOJI_FONT }}>
                 {recipe.heroEmoji || '🍣'}
               </span>
+              {onToggleFavorite && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+                  className="absolute top-2 right-2 text-[20px] leading-none cursor-pointer"
+                >
+                  {isFavorite ? '★' : '☆'}
+                </button>
+              )}
             </div>
             <div className="p-4 flex flex-col gap-2 flex-1">
               <h3 className="text-[17px] tracking-[-0.17px] font-normal leading-tight">{recipe.title}</h3>

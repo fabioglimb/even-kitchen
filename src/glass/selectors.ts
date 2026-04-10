@@ -23,6 +23,6 @@ export function toSplitData(snapshot: KitchenSnapshot, nav: GlassNavState): Spli
     case 'cooking':
       return buildCookingSplit(snapshot, nav);
     default:
-      return { header: '', left: '', right: '' };
+      return { header: '', panes: ['', ''] };
   }
 }

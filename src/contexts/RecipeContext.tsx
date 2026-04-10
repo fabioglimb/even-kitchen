@@ -1,6 +1,7 @@
 import { createContext, useContext, useReducer, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Recipe, AppSettings } from '../types/recipe'
 import { loadRecipes, saveRecipes, loadSettings, decryptSettings, saveSettingsEncrypted } from '../data/persistence'
+import { storageGet, storageSet } from 'even-toolkit/storage'
 import { seedRecipes } from '../data/seed-recipes'
 
 // --- State ---
@@ -9,6 +10,7 @@ interface RecipeState {
   settings: AppSettings
   selectedRecipe: Recipe | null
   categoryFilter: string
+  favoriteIds: string[]
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -31,7 +33,8 @@ type RecipeAction =
   | { type: 'TOGGLE_ARCHIVE'; id: string }
   | { type: 'RESET_TO_DEFAULTS' }
   | { type: 'SET_SETTINGS'; settings: AppSettings }
-  | { type: 'INIT'; recipes: Recipe[]; settings: AppSettings }
+  | { type: 'TOGGLE_FAVORITE'; id: string }
+  | { type: 'INIT'; recipes: Recipe[]; settings: AppSettings; favoriteIds: string[] }
 
 // --- Context value ---
 interface RecipeContextValue {
@@ -40,8 +43,10 @@ interface RecipeContextValue {
   categories: string[]
   selectedRecipe: Recipe | null
   categoryFilter: string
+  favoriteIds: string[]
   loaded: boolean
   setSelectedRecipe: (recipe: Recipe | null) => void
+  toggleFavorite: (id: string) => void
   setCategoryFilter: (category: string) => void
   addRecipe: (recipe: Recipe) => void
   updateRecipe: (recipe: Recipe) => void
@@ -58,7 +63,11 @@ const RecipeContext = createContext<RecipeContextValue | null>(null)
 function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
   switch (action.type) {
     case 'INIT':
-      return { ...state, recipes: action.recipes, settings: action.settings }
+      return { ...state, recipes: action.recipes, settings: action.settings, favoriteIds: action.favoriteIds }
+    case 'TOGGLE_FAVORITE': {
+      const isFav = state.favoriteIds.includes(action.id)
+      return { ...state, favoriteIds: isFav ? state.favoriteIds.filter((f) => f !== action.id) : [...state.favoriteIds, action.id] }
+    }
     case 'SET_SELECTED':
       return { ...state, selectedRecipe: action.recipe }
     case 'SET_CATEGORY_FILTER':
@@ -104,6 +113,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     settings: DEFAULT_SETTINGS,
     selectedRecipe: null,
     categoryFilter: 'All',
+    favoriteIds: [],
   })
   const [loaded, setLoaded] = useState(false)
 
@@ -114,9 +124,9 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   // Load data async on mount
   useEffect(() => {
     async function init() {
-      const [recipes, rawSettings] = await Promise.all([loadRecipes(), loadSettings()])
+      const [recipes, rawSettings, favoriteIds] = await Promise.all([loadRecipes(), loadSettings(), storageGet<string[]>('kitchen-favorites', [])])
       const settings = await decryptSettings(rawSettings)
-      dispatch({ type: 'INIT', recipes, settings })
+      dispatch({ type: 'INIT', recipes, settings, favoriteIds: favoriteIds ?? [] })
       setLoaded(true)
     }
     init()
@@ -129,9 +139,13 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!loaded) return
-    // Save with encryption (async, fire-and-forget)
     saveSettingsEncrypted(state.settings)
   }, [state.settings, loaded])
+
+  useEffect(() => {
+    if (!loaded) return
+    storageSet('kitchen-favorites', state.favoriteIds)
+  }, [state.favoriteIds, loaded])
 
   const categories = useMemo(
     () => ['All', ...Array.from(new Set(state.recipes.map((r) => r.category)))],
@@ -141,11 +155,13 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   const value: RecipeContextValue = {
     recipes: state.recipes,
     settings: state.settings,
+    favoriteIds: state.favoriteIds,
     categories,
     selectedRecipe: state.selectedRecipe,
     categoryFilter: state.categoryFilter,
     loaded,
     setSelectedRecipe: (recipe) => dispatch({ type: 'SET_SELECTED', recipe }),
+    toggleFavorite: (id) => dispatch({ type: 'TOGGLE_FAVORITE', id }),
     setCategoryFilter: (category) => dispatch({ type: 'SET_CATEGORY_FILTER', category }),
     addRecipe: (recipe) => {
       const next = [...state.recipes, recipe]

@@ -15,7 +15,10 @@ export const recipeListScreen: GlassScreen<KitchenSnapshot, KitchenActions> = {
       items: glassRecipes(snapshot),
       highlightedIndex: nav.highlightedIndex,
       maxVisible: 7,
-      formatter: (r) => truncate(r.title, 54),
+      formatter: (r) => {
+        const star = snapshot.favoriteIds.includes(r.id) ? '★ ' : '';
+        return truncate(`${star}${r.title}`, 54);
+      },
     });
     return { lines: [header, sep, ...menuLines] };
   },

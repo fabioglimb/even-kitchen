@@ -1,5 +1,7 @@
 # EvenKitchen
 
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/f3tch)
+
 A hands-free cooking companion for **Even Realities G2 glasses**. Browse recipes, follow step-by-step cooking instructions with independent per-step timers, import recipes from any URL using AI, and navigate everything hands-free on your glasses while cooking.
 
 ![EvenKitchen Banner](docs/images/banner.png)
@@ -178,6 +180,12 @@ npx @evenrealities/evenhub-cli qr --port 5173 --path / --ip <your-local-ip>
 - API keys are **encrypted at rest** using AES-256-GCM with a non-extractable key stored in IndexedDB
 - API calls go **directly from your device to the AI provider** over HTTPS
 - We never see, store, or transmit your API keys
+
+## Support
+
+If you find this useful, consider supporting the project:
+
+[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://buymeacoffee.com/f3tch)
 
 ## License
 
