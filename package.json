@@ -1,15 +1,16 @@
 {
   "name": "even-kitchen",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173 --host",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "pack": "VITE_EHPK=1 npm run build && npx @evenrealities/evenhub-cli pack app.json dist"
   },
   "dependencies": {
-    "@evenrealities/even_hub_sdk": "^0.0.9",
+    "@evenrealities/even_hub_sdk": "^0.0.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.0",
     "even-toolkit": "^1.7.0",
