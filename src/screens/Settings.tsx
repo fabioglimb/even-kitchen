@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRecipeContext } from "../contexts/RecipeContext"
-import { Button, Input, Select, SegmentedControl, Card, useDrawerHeader } from "even-toolkit/web"
+import { Button, Input, Select, SegmentedControl, Card, Toast, useDrawerHeader } from "even-toolkit/web"
 import { AI_PROVIDERS, APP_LANGUAGES, type AIProvider, type AppLanguage } from "../types/recipe"
 import { useTranslation } from "../hooks/useTranslation"
 import { useRecipeIO } from "../hooks/useRecipeIO"
@@ -42,6 +42,14 @@ export function Settings() {
   const [model, setModel] = useState(settings.aiModel)
   const [showKey, setShowKey] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
+  const [keyError, setKeyError] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!toast) return
+    const id = setTimeout(() => setToast(null), 3000)
+    return () => clearTimeout(id)
+  }, [toast])
 
   const providerConfig = AI_PROVIDERS.find((p) => p.id === provider)!
 
@@ -52,13 +60,22 @@ export function Settings() {
     const config = AI_PROVIDERS.find((p) => p.id === newProvider)!
     const newModel = config.models[0].id
     setModel(newModel)
+    setKeyError(false)
     setSettings({ ...settings, aiProvider: newProvider, aiModel: newModel })
   }
 
   const handleKeyChange = (value: string) => {
+    if (keyError && value.trim()) setKeyError(false)
     if (provider === 'openai') setSettings({ ...settings, openaiApiKey: value })
     else if (provider === 'anthropic') setSettings({ ...settings, anthropicApiKey: value })
     else setSettings({ ...settings, deepseekApiKey: value })
+  }
+
+  const handleKeyBlur = () => {
+    if (!currentKey.trim()) {
+      setKeyError(true)
+      setToast(t('settings.errKeyRequired'))
+    }
   }
 
   const handleReset = () => {
@@ -116,7 +133,9 @@ export function Settings() {
             type={showKey ? "text" : "password"}
             placeholder={provider === 'openai' ? 'sk-...' : provider === 'anthropic' ? 'sk-ant-...' : 'sk-...'}
             value={currentKey}
+            error={keyError}
             onChange={(e) => handleKeyChange(e.target.value)}
+            onBlur={handleKeyBlur}
             className="mt-2"
           />
         </div>
@@ -180,6 +199,12 @@ export function Settings() {
           <span className="text-[11px] tracking-[-0.11px] text-text-dim">v0.1.5</span>
         </SettingRow>
       </Card>
+
+      {toast && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-[420px] px-3">
+          <Toast message={toast} variant="error" />
+        </div>
+      )}
     </div>
   )
 }

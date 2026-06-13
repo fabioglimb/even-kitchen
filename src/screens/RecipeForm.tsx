@@ -8,7 +8,7 @@ import {
 } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useRecipeContext } from "../contexts/RecipeContext";
-import { BottomActionBar, Button, Card, Input, Select, Textarea, useDrawerHeader } from "even-toolkit/web";
+import { BottomActionBar, Button, Card, Input, Select, Textarea, Toast, useDrawerHeader } from "even-toolkit/web";
 import { IcEditAdd, IcTrash } from "even-toolkit/web/icons/svg-icons";
 import { generateId } from "../utils/format";
 import type { Recipe, Ingredient, Step } from "../types/recipe";
@@ -177,6 +177,17 @@ export function RecipeForm() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([emptyIngredient()]);
   const [steps, setSteps] = useState<Step[]>([emptyStep()]);
 
+  const [titleError, setTitleError] = useState(false);
+  const [ingredientsError, setIngredientsError] = useState(false);
+  const [stepsError, setStepsError] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(id);
+  }, [toast]);
+
   useEffect(() => {
     if (existing) {
       setTitle(existing.title);
@@ -205,7 +216,26 @@ export function RecipeForm() {
   };
 
   const handleSave = () => {
-    if (!title.trim()) return;
+    const titleInvalid = !title.trim();
+    const ingredientsInvalid = !ingredients.some((i) => i.name.trim());
+    const stepsInvalid = !steps.some((s) => s.instructions.trim());
+
+    setTitleError(titleInvalid);
+    setIngredientsError(ingredientsInvalid);
+    setStepsError(stepsInvalid);
+
+    if (titleInvalid) {
+      setToast(t('form.errTitleRequired'));
+      return;
+    }
+    if (ingredientsInvalid) {
+      setToast(t('form.errIngredient'));
+      return;
+    }
+    if (stepsInvalid) {
+      setToast(t('form.errStep'));
+      return;
+    }
 
     const recipe: Recipe = {
       id: isEdit && existing ? existing.id : generateId(),
@@ -244,7 +274,11 @@ export function RecipeForm() {
           <Input
             placeholder={t('form.recipeName')}
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            error={titleError}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (titleError) setTitleError(false);
+            }}
           />
         </FieldRow>
         <FieldRow label={t('form.description')}>
@@ -366,7 +400,11 @@ export function RecipeForm() {
                     className="mt-1"
                     placeholder={t('form.name')}
                     value={ing.name}
-                    onChange={(e) => updateIngredient(i, "name", e.target.value)}
+                    error={ingredientsError}
+                    onChange={(e) => {
+                      updateIngredient(i, "name", e.target.value);
+                      if (ingredientsError) setIngredientsError(false);
+                    }}
                   />
                 </div>
                 <div data-no-swipe>
@@ -440,7 +478,11 @@ export function RecipeForm() {
                   className="mt-1 min-h-[72px]"
                   placeholder={t('form.instructions')}
                   value={step.instructions}
-                  onChange={(e) => updateStep(i, "instructions", e.target.value)}
+                  error={stepsError}
+                  onChange={(e) => {
+                    updateStep(i, "instructions", e.target.value);
+                    if (stepsError) setStepsError(false);
+                  }}
                 />
               </div>
             </div>
@@ -464,11 +506,17 @@ export function RecipeForm() {
           <Button size="lg" variant="secondary" className="w-full" onClick={() => navigate(isEdit && id ? `/recipe/${id}` : "/")}>
             {t('form.cancel')}
           </Button>
-          <Button size="lg" className="w-full" onClick={handleSave} disabled={!title.trim()}>
+          <Button size="lg" className="w-full" onClick={handleSave}>
             {isEdit ? t('form.saveChanges') : t('form.createRecipe')}
           </Button>
         </div>
       </BottomActionBar>
+
+      {toast && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-[420px] px-3">
+          <Toast message={toast} variant="error" />
+        </div>
+      )}
     </main>
   );
 }
