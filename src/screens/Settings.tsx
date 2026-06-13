@@ -1,9 +1,9 @@
-import { useState, useRef } from "react"
+import { useState } from "react"
 import { useRecipeContext } from "../contexts/RecipeContext"
 import { Button, Input, Select, SegmentedControl, Card, useDrawerHeader } from "even-toolkit/web"
-import { downloadJson, validateImportedRecipes } from "../utils/export"
 import { AI_PROVIDERS, APP_LANGUAGES, type AIProvider, type AppLanguage } from "../types/recipe"
 import { useTranslation } from "../hooks/useTranslation"
+import { useRecipeIO } from "../hooks/useRecipeIO"
 
 function SettingRow({ label, description, children }: { label: string; description?: string; children: React.ReactNode }) {
   return (
@@ -27,16 +27,21 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function Settings() {
-  const { recipes, settings, setSettings, importRecipes, resetToDefaults } =
-    useRecipeContext()
+  const { settings, setSettings, resetToDefaults } = useRecipeContext()
 
   const { t } = useTranslation()
+  const {
+    fileInputRef,
+    statusMessage: importStatus,
+    exportRecipes: handleExport,
+    triggerImport,
+    handleImportFile,
+    recipeCount,
+  } = useRecipeIO()
   const [provider, setProvider] = useState<AIProvider>(settings.aiProvider)
   const [model, setModel] = useState(settings.aiModel)
   const [showKey, setShowKey] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
-  const [importStatus, setImportStatus] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const providerConfig = AI_PROVIDERS.find((p) => p.id === provider)!
 
@@ -54,33 +59,6 @@ export function Settings() {
     if (provider === 'openai') setSettings({ ...settings, openaiApiKey: value })
     else if (provider === 'anthropic') setSettings({ ...settings, anthropicApiKey: value })
     else setSettings({ ...settings, deepseekApiKey: value })
-  }
-
-  const handleExport = () => {
-    downloadJson(recipes, `even-kitchen-recipes-${Date.now()}.json`)
-  }
-
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      try {
-        const data = JSON.parse(event.target?.result as string)
-        const validated = validateImportedRecipes(data)
-        if (validated) {
-          importRecipes(validated)
-          setImportStatus(t('settings.importedRecipes').replace('{count}', String(validated.length)))
-        } else {
-          setImportStatus(t('settings.invalidFormat'))
-        }
-      } catch {
-        setImportStatus(t('settings.parseFailed'))
-      }
-    }
-    reader.readAsText(file)
-    if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
   const handleReset = () => {
@@ -160,7 +138,7 @@ export function Settings() {
       {/* Data */}
       <SectionLabel>{t('settings.data')}</SectionLabel>
       <Card className="mb-4">
-        <SettingRow label={t('settings.exportRecipes')} description={`${recipes.length} ${t('settings.recipesInCollection')}`}>
+        <SettingRow label={t('settings.exportRecipes')} description={`${recipeCount} ${t('settings.recipesInCollection')}`}>
           <Button size="sm" variant="secondary" onClick={handleExport}>
             {t('settings.exportBtn')}
           </Button>
@@ -170,10 +148,10 @@ export function Settings() {
             ref={fileInputRef}
             type="file"
             accept=".json"
-            onChange={handleImport}
+            onChange={handleImportFile}
             className="hidden"
           />
-          <Button size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+          <Button size="sm" variant="secondary" onClick={triggerImport}>
             {t('settings.importBtn')}
           </Button>
         </SettingRow>
