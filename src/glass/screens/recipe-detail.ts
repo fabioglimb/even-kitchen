@@ -11,6 +11,7 @@ import {
   wordWrap,
   buildSplitHeader,
   buildPaneText,
+  SPLIT_PANE_LINES,
 } from '../shared';
 import { t } from '../../utils/i18n';
 
@@ -44,7 +45,7 @@ function recipeDetailLines(recipe: Recipe, lang: AppLanguage): string[] {
 
 export function recipeDetailLineCount(recipe: Recipe): number {
   const contentLength = ingredientLines(recipe).flatMap((line) => wordWrap(line, DETAIL_CONTENT_WIDTH)).length;
-  return Math.max(0, contentLength - 8);
+  return Math.max(0, contentLength - SPLIT_PANE_LINES);
 }
 
 function difficultySpades(difficulty: string): string {
@@ -77,6 +78,8 @@ export function buildRecipeDetailSplit(snapshot: KitchenSnapshot, nav: { highlig
       buildPaneText(ingredientLines(recipe), DETAIL_LEFT_WIDTH, nav.highlightedIndex),
       buildPaneText(recipeSummaryLines(recipe, snapshot.language), DETAIL_RIGHT_WIDTH, 0),
     ],
+    // Taller header fits the title + separator (2 lines) without a scroll bar.
+    layout: { headerHeight: 72 },
   };
 }
 

@@ -89,6 +89,7 @@ export function KitchenGlasses() {
     onGlassAction: handleGlassAction,
     deriveScreen,
     appName: 'ER KITCHEN',
+    headerClock: true,
     getPageMode: (screen) => {
       if (screen === 'recipe-list') return 'home';
       if (screen === 'recipe-detail' || screen === 'cooking') return 'split';

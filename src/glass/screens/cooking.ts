@@ -16,6 +16,7 @@ import {
   wordWrap,
   buildSplitHeader,
   buildPaneText,
+  SPLIT_PANE_LINES,
 } from '../shared';
 
 const COOK_LEFT_WIDTH = 32;
@@ -96,7 +97,7 @@ function buildTimerPaneLines(recipe: Recipe, stepIndex: number, timers: Record<n
 }
 
 export function cookingContentLineCount(recipe: Recipe, stepIndex: number): number {
-  return Math.max(0, buildInstructionLines(recipe, stepIndex).length - 8);
+  return Math.max(0, buildInstructionLines(recipe, stepIndex).length - SPLIT_PANE_LINES);
 }
 
 export function buildCookingSplit(snapshot: KitchenSnapshot, nav: { highlightedIndex: number }): SplitData {
@@ -122,6 +123,8 @@ export function buildCookingSplit(snapshot: KitchenSnapshot, nav: { highlightedI
       buildPaneText(buildInstructionLines(recipe, currentStepIndex), COOK_LEFT_WIDTH, mode === 'scroll' ? cookMode.getOffset(nav.highlightedIndex) : 0),
       buildPaneText(buildTimerPaneLines(recipe, currentStepIndex, timers, lang), COOK_RIGHT_WIDTH, 0),
     ],
+    // Taller header fits the title + separator (2 lines) without a scroll bar.
+    layout: { headerHeight: 72 },
   };
 }
 

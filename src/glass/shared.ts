@@ -54,7 +54,10 @@ export function wordWrap(text: string, maxChars: number): string[] {
   return lines;
 }
 
-export const SPLIT_PANE_LINES = 8;
+// 7 visible lines: a 2-line header (72px) leaves the panes room for 7 lines on
+// the 288px display; padding to 8 made the pane content overflow and showed a
+// vertical scroll indicator.
+export const SPLIT_PANE_LINES = 7;
 const SPLIT_LINE_PREFIX = '  ';
 
 export function buildSplitHeader(title: string, actionBar?: string): string {
