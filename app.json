@@ -9,7 +9,16 @@
   "permissions": [
     {
       "name": "network",
-      "desc": "Used for AI-powered recipe import from URLs via OpenAI, Anthropic, or Google APIs"
+      "desc": "AI-powered recipe import from URLs via OpenAI, Anthropic, or DeepSeek.",
+      "whitelist": [
+        "https://api.openai.com",
+        "https://api.anthropic.com",
+        "https://api.deepseek.com",
+        "https://react.dev",
+        "https://reactrouter.com",
+        "http://www.w3.org",
+        "http://localhost"
+      ]
     }
   ],
   "supported_languages": [
