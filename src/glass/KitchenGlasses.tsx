@@ -20,10 +20,9 @@ const deriveScreen = createScreenMapper([
 const extractRecipeId = createIdExtractor(/^\/recipe\/([^/]+)/);
 
 export function KitchenGlasses() {
-  const { recipes, collections, settings, favoriteIds, smartViewConfig } = useRecipeContext();
+  const { recipes, collections, settings, favoriteIds, smartViewConfig, servingsOverrides, setServingsOverride } = useRecipeContext();
   const { currentStepIndex, setCurrentStepIndex, timers, getTimer, setStepTimer, resetAllTimers } = useCookingContext();
   const { items: shoppingItems, recipeScales: shoppingScales, toggleItem: toggleShoppingItem } = useShoppingContext();
-  const [servingsOverrides, setServingsOverrides] = useState<Record<string, number>>({});
   const [glassViewMode, setGlassViewMode] = useState<'full' | 'smart'>(smartViewConfig?.defaultMode ?? DEFAULT_SMART_VIEW.defaultMode);
   const [pendingExit, setPendingExit] = useState(false);
   const navigate = useNavigate();
@@ -79,10 +78,6 @@ export function KitchenGlasses() {
       setStepTimer(idx, { running: true, remaining: step.timerSeconds, total: step.timerSeconds });
     }
   }, [getTimer, setStepTimer]);
-
-  const setServingsOverride = useCallback((recipeId: string, servings: number) => {
-    setServingsOverrides((prev) => ({ ...prev, [recipeId]: servings }));
-  }, []);
 
   const toggleViewMode = useCallback(() => {
     setGlassViewMode((prev) => (prev === 'full' ? 'smart' : 'full'));

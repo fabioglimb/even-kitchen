@@ -1,11 +1,12 @@
 import { DrawerShell } from 'even-toolkit/web';
 import type { SideDrawerItem } from 'even-toolkit/web';
-import { IcMenuHome, IcEditSettings, IcNavShopping } from 'even-toolkit/web/icons/svg-icons';
+import { IcMenuHome, IcEditSettings, IcNavShopping, IcEditDotLists } from 'even-toolkit/web/icons/svg-icons';
 
 const iconProps = { width: 18, height: 18, className: 'text-current' };
 
 const MENU_ITEMS: SideDrawerItem[] = [
   { id: '/', label: 'Recipes', section: 'Kitchen', icon: <IcMenuHome {...iconProps} /> },
+  { id: '/cookbooks', label: 'Cookbooks', section: 'Kitchen', icon: <IcEditDotLists {...iconProps} /> },
   { id: '/shopping', label: 'Shopping List', section: 'Kitchen', icon: <IcNavShopping {...iconProps} /> },
 ];
 
@@ -16,6 +17,7 @@ const BOTTOM_ITEMS: SideDrawerItem[] = [
 function getPageTitle(pathname: string): string {
   if (pathname === '/') return 'ER Kitchen';
   if (pathname === '/shopping') return 'Shopping List';
+  if (pathname === '/cookbooks') return 'Cookbooks';
   if (pathname === '/recipe/new') return 'New Recipe';
   if (pathname.includes('/edit')) return 'Edit Recipe';
   if (pathname.includes('/cook')) return 'Cooking';
@@ -28,6 +30,7 @@ function getPageTitle(pathname: string): string {
 function deriveActiveId(pathname: string): string {
   if (pathname === '/') return '/';
   if (pathname === '/shopping') return '/shopping';
+  if (pathname === '/cookbooks') return '/cookbooks';
   if (pathname === '/recipe/new') return '/recipe/new';
   if (pathname === '/settings') return '/settings';
   return '/';

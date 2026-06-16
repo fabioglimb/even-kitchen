@@ -4,16 +4,17 @@ import { useRecipeContext } from "../contexts/RecipeContext"
 import { useRecipes } from "../hooks/useRecipes"
 import { useRecipeIO } from "../hooks/useRecipeIO"
 import { RecipeCard } from "../components/shared/RecipeCard"
-import { CategoryFilter, Button, Toast, useDrawerHeader } from "even-toolkit/web"
-import { IcEditAdd, IcEditImport, IcShare } from "even-toolkit/web/icons/svg-icons"
+import { CategoryFilter, Button, BottomSheet, ListItem, Toast, useDrawerHeader } from "even-toolkit/web"
+import { IcEditAdd, IcEditImport, IcShare, IcMore } from "even-toolkit/web/icons/svg-icons"
 import { AIImportTab } from "../components/shared/AIImportTab"
 import { useTranslation } from "../hooks/useTranslation"
 
 export function RecipeLibrary() {
   const navigate = useNavigate()
-  const { categories, categoryFilter, setCategoryFilter, collections, collectionFilter, setCollectionFilter, settings, deleteRecipe, favoriteIds, toggleFavorite } = useRecipeContext()
-  const recipes = useRecipes(categoryFilter, collectionFilter)
+  const { categories, categoryFilter, setCategoryFilter, settings, deleteRecipe, favoriteIds, toggleFavorite } = useRecipeContext()
+  const recipes = useRecipes(categoryFilter)
   const [activeTab, setActiveTab] = useState<"library" | "ai-import">("library")
+  const [moreOpen, setMoreOpen] = useState(false)
   const {
     fileInputRef,
     statusMessage,
@@ -36,18 +37,10 @@ export function RecipeLibrary() {
         <Button
           size="sm"
           variant="ghost"
-          onClick={exportRecipes}
-          aria-label={t('settings.exportBtn')}
+          onClick={() => setMoreOpen(true)}
+          aria-label={t('library.more')}
         >
-          <IcShare width={16} height={16} />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={triggerImport}
-          aria-label={t('settings.importBtn')}
-        >
-          <IcEditImport width={16} height={16} />
+          <IcMore width={16} height={16} />
         </Button>
         <Button size="sm" onClick={() => navigate("/recipe/new")} aria-label={t('form.newRecipe')}>
           <IcEditAdd width={16} height={16} />
@@ -65,6 +58,20 @@ export function RecipeLibrary() {
         onChange={handleImportFile}
         className="hidden"
       />
+      <BottomSheet open={moreOpen} onClose={() => setMoreOpen(false)}>
+        <div className="py-2">
+          <ListItem
+            title={t('settings.exportBtn')}
+            leading={<IcShare width={18} height={18} />}
+            onPress={() => { exportRecipes(); setMoreOpen(false); }}
+          />
+          <ListItem
+            title={t('settings.importBtn')}
+            leading={<IcEditImport width={18} height={18} />}
+            onPress={() => { triggerImport(); setMoreOpen(false); }}
+          />
+        </div>
+      </BottomSheet>
       {statusMessage && (
         <div className="mb-3">
           <Toast
@@ -99,37 +106,7 @@ export function RecipeLibrary() {
       )}
 
       {activeTab === "library" && (
-        <>
-          {/* Collection filter */}
-          {collections.length > 0 && (
-            <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1">
-              <button
-                onClick={() => setCollectionFilter('All')}
-                className={`shrink-0 rounded-[6px] px-3 py-1.5 text-[13px] tracking-[-0.13px] font-normal transition-colors cursor-pointer ${
-                  collectionFilter === 'All'
-                    ? 'bg-text text-surface'
-                    : 'bg-surface text-text-dim'
-                }`}
-              >
-                {t('collection.all')}
-              </button>
-              {collections.map((col) => (
-                <button
-                  key={col.id}
-                  onClick={() => setCollectionFilter(col.id)}
-                  className={`shrink-0 rounded-[6px] px-3 py-1.5 text-[13px] tracking-[-0.13px] font-normal transition-colors cursor-pointer ${
-                    collectionFilter === col.id
-                      ? 'bg-text text-surface'
-                      : 'bg-surface text-text-dim'
-                  }`}
-                >
-                  {col.emoji} {col.name}
-                </button>
-              ))}
-            </div>
-          )}
-          <CategoryFilter categories={categories} selected={categoryFilter} onSelect={setCategoryFilter} />
-        </>
+        <CategoryFilter categories={categories} selected={categoryFilter} onSelect={setCategoryFilter} />
       )}
 
       {activeTab === "library" ? (

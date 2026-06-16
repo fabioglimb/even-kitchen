@@ -24,7 +24,7 @@ export function ZoomableImage({ images, alt = "", className }: ZoomableImageProp
           e.stopPropagation();
           setIndex(0);
         }}
-        className="relative block border-0 bg-transparent p-0 cursor-pointer"
+        className="relative block w-full border-0 bg-transparent p-0 cursor-pointer"
         aria-label={alt || "Open image"}
       >
         <img src={images[0]} alt={alt} className={className} />

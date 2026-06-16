@@ -8,8 +8,8 @@ import {
 } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useRecipeContext } from "../contexts/RecipeContext";
-import { BottomActionBar, Button, Card, Input, Select, Textarea, Toast, useDrawerHeader } from "even-toolkit/web";
-import { IcEditAdd, IcTrash, IcFeatCamera } from "even-toolkit/web/icons/svg-icons";
+import { BottomActionBar, Button, Card, Input, MultiSelect, Select, Textarea, Toast, useDrawerHeader } from "even-toolkit/web";
+import { IcEditAdd, IcTrash, IcFeatCamera, IcStatusGrabber } from "even-toolkit/web/icons/svg-icons";
 import { generateId } from "../utils/format";
 import { fileToThumbnailDataUrl } from "../utils/image";
 import type { Recipe, Ingredient, Step } from "../types/recipe";
@@ -161,7 +161,7 @@ function SwipeDeleteCard({
 export function RecipeForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { recipes, addRecipe, updateRecipe } = useRecipeContext();
+  const { recipes, collections, addRecipe, updateRecipe, addRecipeToCollection, removeRecipeFromCollection, getRecipeCollectionIds } = useRecipeContext();
   const { t } = useTranslation();
   const isEdit = Boolean(id);
   const existing = isEdit ? recipes.find((r) => r.id === id) : null;
@@ -178,11 +178,17 @@ export function RecipeForm() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([emptyIngredient()]);
   const [steps, setSteps] = useState<Step[]>([emptyStep()]);
   const [images, setImages] = useState<string[]>([]);
+  const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
 
   const [titleError, setTitleError] = useState(false);
   const [ingredientsError, setIngredientsError] = useState(false);
   const [stepsError, setStepsError] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const stepDragRef = useRef<{ index: number; startClientY: number } | null>(null);
+  const [stepDraggingIndex, setStepDraggingIndex] = useState<number | null>(null);
+  const [stepDragOffset, setStepDragOffset] = useState(0);
 
   useEffect(() => {
     if (!toast) return;
@@ -204,6 +210,7 @@ export function RecipeForm() {
       setIngredients(existing.ingredients.length > 0 ? existing.ingredients : [emptyIngredient()]);
       setSteps(existing.steps.length > 0 ? existing.steps : [emptyStep()]);
       setImages(existing.images ?? []);
+      setSelectedCollectionIds(getRecipeCollectionIds(existing.id));
       return;
     }
 
@@ -217,6 +224,84 @@ export function RecipeForm() {
   const updateStep = (index: number, field: keyof Step, value: string | number | undefined) => {
     setSteps((prev) => prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)));
   };
+
+  const moveStep = useCallback((from: number, to: number) => {
+    setSteps((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  }, []);
+
+  const handleStepDragMove = useCallback((clientY: number) => {
+    if (!stepDragRef.current) return;
+    const { index, startClientY } = stepDragRef.current;
+    const delta = clientY - startClientY;
+    const refs = stepRefs.current;
+    const dragged = refs[index];
+    if (!dragged) return;
+    const draggedRect = dragged.getBoundingClientRect();
+    const draggedMidY = draggedRect.top + draggedRect.height / 2;
+
+    if (index > 0) {
+      const above = refs[index - 1];
+      if (above) {
+        const aboveRect = above.getBoundingClientRect();
+        if (draggedMidY < aboveRect.top + aboveRect.height / 2) {
+          const newStart = startClientY - aboveRect.height;
+          stepDragRef.current = { index: index - 1, startClientY: newStart };
+          setStepDraggingIndex(index - 1);
+          setStepDragOffset(clientY - newStart);
+          moveStep(index, index - 1);
+          return;
+        }
+      }
+    }
+    if (index < steps.length - 1) {
+      const below = refs[index + 1];
+      if (below) {
+        const belowRect = below.getBoundingClientRect();
+        if (draggedMidY > belowRect.top + belowRect.height / 2) {
+          const newStart = startClientY + belowRect.height;
+          stepDragRef.current = { index: index + 1, startClientY: newStart };
+          setStepDraggingIndex(index + 1);
+          setStepDragOffset(clientY - newStart);
+          moveStep(index, index + 1);
+          return;
+        }
+      }
+    }
+    setStepDragOffset(delta);
+  }, [moveStep, steps.length]);
+
+  const handleStepDragEnd = useCallback(() => {
+    stepDragRef.current = null;
+    setStepDraggingIndex(null);
+    setStepDragOffset(0);
+  }, []);
+
+  const onStepHandleTouchStart = useCallback((e: ReactTouchEvent, index: number) => {
+    stepDragRef.current = { index, startClientY: e.touches[0].clientY };
+    setStepDraggingIndex(index);
+    setStepDragOffset(0);
+  }, []);
+
+  const onStepHandleTouchMove = useCallback((e: ReactTouchEvent) => {
+    handleStepDragMove(e.touches[0].clientY);
+  }, [handleStepDragMove]);
+
+  useEffect(() => {
+    if (stepDraggingIndex === null) return;
+    const onMouseMove = (e: MouseEvent) => handleStepDragMove(e.clientY);
+    const onMouseUp = () => handleStepDragEnd();
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [stepDraggingIndex, handleStepDragMove, handleStepDragEnd]);
 
   const handleSave = () => {
     const titleInvalid = !title.trim();
@@ -261,6 +346,12 @@ export function RecipeForm() {
     } else {
       addRecipe(recipe);
     }
+
+    const previousCollectionIds = isEdit && existing ? getRecipeCollectionIds(existing.id) : [];
+    const toAdd = selectedCollectionIds.filter((cid) => !previousCollectionIds.includes(cid));
+    const toRemove = previousCollectionIds.filter((cid) => !selectedCollectionIds.includes(cid));
+    for (const cid of toAdd) addRecipeToCollection(recipe.id, cid);
+    for (const cid of toRemove) removeRecipeFromCollection(recipe.id, cid);
 
     navigate(`/recipe/${recipe.id}`);
   };
@@ -317,6 +408,16 @@ export function RecipeForm() {
             </div>
           </div>
         </div>
+        {collections.length > 0 && (
+          <FieldRow label={t('form.cookbook')}>
+            <MultiSelect
+              options={collections.map((c) => ({ value: c.id, label: `${c.emoji} ${c.name}` }))}
+              values={selectedCollectionIds}
+              onValuesChange={(values) => setSelectedCollectionIds(values)}
+              placeholder={t('form.selectCookbooks')}
+            />
+          </FieldRow>
+        )}
         <div className="grid grid-cols-3 gap-2 px-3 py-3">
           <div>
             <FieldLabel>{t('form.prepMin')}</FieldLabel>
@@ -489,50 +590,83 @@ export function RecipeForm() {
 
       <SectionLabel>{t('form.steps')}</SectionLabel>
       <Card className="mb-4" padding="none">
-        {steps.map((step, i) => (
-          <SwipeDeleteCard
-            key={i}
-            onDelete={steps.length > 1 ? () => setSteps((prev) => prev.filter((_, idx) => idx !== i)) : undefined}
-          >
-            <div className="bg-surface px-3 py-3 border-b border-border last:border-b-0">
-              <div className="grid grid-cols-[minmax(0,1fr)_136px] gap-2">
-                <div data-no-swipe>
-                  <FieldLabel>{t('form.title')}</FieldLabel>
-                  <Input
-                    className="mt-1"
-                    placeholder={t('form.stepTitle')}
-                    value={step.title}
-                    onChange={(e) => updateStep(i, "title", e.target.value)}
-                  />
+        {steps.map((step, i) => {
+          const isDragging = stepDraggingIndex === i;
+          return (
+            <div
+              key={i}
+              ref={(el) => { stepRefs.current[i] = el; }}
+              style={isDragging ? {
+                transform: `translateY(${stepDragOffset}px)`,
+                position: 'relative',
+                zIndex: 10,
+                boxShadow: '0 6px 16px rgba(0,0,0,0.18)',
+                willChange: 'transform',
+              } : undefined}
+            >
+              <SwipeDeleteCard
+                onDelete={steps.length > 1 ? () => setSteps((prev) => prev.filter((_, idx) => idx !== i)) : undefined}
+              >
+                <div className="bg-surface px-3 py-3 border-b border-border last:border-b-0">
+                  <div className="flex items-start gap-2">
+                    <div
+                      className="flex items-center justify-center touch-none p-1 mt-1 shrink-0 cursor-grab"
+                      onTouchStart={(e) => onStepHandleTouchStart(e, i)}
+                      onTouchMove={onStepHandleTouchMove}
+                      onTouchEnd={handleStepDragEnd}
+                      onTouchCancel={handleStepDragEnd}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        stepDragRef.current = { index: i, startClientY: e.clientY };
+                        setStepDraggingIndex(i);
+                        setStepDragOffset(0);
+                      }}
+                    >
+                      <IcStatusGrabber width={16} height={16} className="text-text-dim" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-2">
+                        <div data-no-swipe>
+                          <FieldLabel>{t('form.title')}</FieldLabel>
+                          <Input
+                            className="mt-1"
+                            placeholder={t('form.stepTitle')}
+                            value={step.title}
+                            onChange={(e) => updateStep(i, "title", e.target.value)}
+                          />
+                        </div>
+                        <div data-no-swipe>
+                          <FieldLabel>{t('form.timerSeconds')}</FieldLabel>
+                          <Input
+                            className="mt-1"
+                            type="number"
+                            min={0}
+                            placeholder="0"
+                            value={step.timerSeconds ?? ""}
+                            onChange={(e) => updateStep(i, "timerSeconds", e.target.value === "" ? undefined : Number(e.target.value) || 0)}
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-2" data-no-swipe>
+                        <FieldLabel>{t('form.instructions')}</FieldLabel>
+                        <Textarea
+                          className="mt-1 min-h-[72px]"
+                          placeholder={t('form.instructions')}
+                          value={step.instructions}
+                          error={stepsError}
+                          onChange={(e) => {
+                            updateStep(i, "instructions", e.target.value);
+                            if (stepsError) setStepsError(false);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div data-no-swipe>
-                  <FieldLabel>{t('form.timerSeconds')}</FieldLabel>
-                  <Input
-                    className="mt-1"
-                    type="number"
-                    min={0}
-                    placeholder="0"
-                    value={step.timerSeconds ?? ""}
-                    onChange={(e) => updateStep(i, "timerSeconds", e.target.value === "" ? undefined : Number(e.target.value) || 0)}
-                  />
-                </div>
-              </div>
-              <div className="mt-2" data-no-swipe>
-                <FieldLabel>{t('form.instructions')}</FieldLabel>
-                <Textarea
-                  className="mt-1 min-h-[72px]"
-                  placeholder={t('form.instructions')}
-                  value={step.instructions}
-                  error={stepsError}
-                  onChange={(e) => {
-                    updateStep(i, "instructions", e.target.value);
-                    if (stepsError) setStepsError(false);
-                  }}
-                />
-              </div>
+              </SwipeDeleteCard>
             </div>
-          </SwipeDeleteCard>
-        ))}
+          );
+        })}
         <div className="px-3 py-3">
           <Button
             size="lg"

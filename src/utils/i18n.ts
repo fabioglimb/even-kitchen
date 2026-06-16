@@ -149,6 +149,7 @@ const translations: Record<string, Record<AppLanguage, string>> = {
 
   // Library - additional
   'library.newBtn': { en: '+ New', it: '+ Nuova', es: '+ Nueva', fr: '+ Nouveau', de: '+ Neu', pt: '+ Nova', ja: '+ 新規', zh: '+ 新建', ko: '+ 새로', ru: '+ Новый' },
+  'library.more': { en: 'More', it: 'Altro', es: 'Más', fr: 'Plus', de: 'Mehr', pt: 'Mais', ja: 'その他', zh: '更多', ko: '더보기', ru: 'Ещё' },
 
   // Cooking - additional (fallback)
   'cooking.title': { en: 'Cooking', it: 'Cottura', es: 'Cocinando', fr: 'Cuisson', de: 'Kochen', pt: 'Cozinhando', ja: '調理中', zh: '烹饪中', ko: '요리 중', ru: 'Готовка' },
@@ -225,6 +226,19 @@ const translations: Record<string, Record<AppLanguage, string>> = {
   'form.addAnotherPhoto': { en: 'Add Another', it: 'Aggiungi Altra', es: 'Añadir Otra', fr: 'Ajouter Autre', de: 'Weitere hinzufügen', pt: 'Adicionar Outra', ja: 'さらに追加', zh: '添加更多', ko: '추가', ru: 'Добавить ещё' },
   'form.removePhoto': { en: 'Remove photo', it: 'Rimuovi foto', es: 'Eliminar foto', fr: 'Supprimer photo', de: 'Foto entfernen', pt: 'Remover foto', ja: '写真を削除', zh: '删除照片', ko: '사진 삭제', ru: 'Удалить фото' },
   'recipe.photos': { en: 'Photos', it: 'Foto', es: 'Fotos', fr: 'Photos', de: 'Fotos', pt: 'Fotos', ja: '写真', zh: '照片', ko: '사진', ru: 'Фото' },
+
+  // Collections / Cookbooks
+  'form.cookbook': { en: 'Cookbook', it: 'Raccolta', es: 'Colección', fr: 'Collection', de: 'Kochbuch', pt: 'Coleção', ja: 'レシピ集', zh: '食谱集', ko: '요리책', ru: 'Сборник' },
+  'form.selectCookbooks': { en: 'Select cookbooks', it: 'Seleziona raccolte', es: 'Seleccionar colecciones', fr: 'Sélectionner collections', de: 'Kochbücher auswählen', pt: 'Selecionar coleções', ja: 'レシピ集を選択', zh: '选择食谱集', ko: '요리책 선택', ru: 'Выбрать сборники' },
+  'cookbooks.title': { en: 'Cookbooks', it: 'Raccolte', es: 'Colecciones', fr: 'Collections', de: 'Kochbücher', pt: 'Coleções', ja: 'レシピ集', zh: '食谱集', ko: '요리책', ru: 'Сборники' },
+  'cookbooks.new': { en: 'New', it: 'Nuova', es: 'Nueva', fr: 'Nouveau', de: 'Neu', pt: 'Nova', ja: '新規', zh: '新建', ko: '새로', ru: 'Новый' },
+  'cookbooks.create': { en: 'Create', it: 'Crea', es: 'Crear', fr: 'Créer', de: 'Erstellen', pt: 'Criar', ja: '作成', zh: '创建', ko: '만들기', ru: 'Создать' },
+  'cookbooks.namePlaceholder': { en: 'Cookbook name', it: 'Nome raccolta', es: 'Nombre colección', fr: 'Nom de la collection', de: 'Kochbuch-Name', pt: 'Nome da coleção', ja: 'レシピ集名', zh: '食谱集名称', ko: '요리책 이름', ru: 'Название сборника' },
+  'cookbooks.empty': { en: 'No cookbooks yet', it: 'Nessuna raccolta', es: 'Sin colecciones', fr: 'Aucune collection', de: 'Noch keine Kochbücher', pt: 'Sem coleções', ja: 'レシピ集なし', zh: '暂无食谱集', ko: '요리책 없음', ru: 'Нет сборников' },
+  'cookbooks.recipeCount': { en: 'recipes', it: 'ricette', es: 'recetas', fr: 'recettes', de: 'Rezepte', pt: 'receitas', ja: 'レシピ', zh: '个食谱', ko: '레시피', ru: 'рецептов' },
+  'cookbooks.delete': { en: 'Delete Cookbook', it: 'Elimina Raccolta', es: 'Eliminar Colección', fr: 'Supprimer Collection', de: 'Kochbuch löschen', pt: 'Excluir Coleção', ja: 'レシピ集を削除', zh: '删除食谱集', ko: '요리책 삭제', ru: 'Удалить сборник' },
+  'cookbooks.confirmDelete': { en: 'This will remove the cookbook. Recipes inside won\'t be deleted.', it: 'La raccolta verrà rimossa. Le ricette al suo interno non verranno eliminate.', es: 'Se eliminará la colección. Las recetas no se borrarán.', fr: 'La collection sera supprimée. Les recettes ne seront pas effacées.', de: 'Das Kochbuch wird gelöscht. Rezepte bleiben erhalten.', pt: 'A coleção será removida. As receitas não serão excluídas.', ja: 'レシピ集を削除します。中のレシピは残ります。', zh: '将删除食谱集。其中的食谱不会被删除。', ko: '요리책이 삭제됩니다. 레시피는 삭제되지 않습니다.', ru: 'Сборник будет удалён. Рецепты сохранятся.' },
+  'cookbooks.manage': { en: 'Manage', it: 'Gestisci', es: 'Gestionar', fr: 'Gérer', de: 'Verwalten', pt: 'Gerenciar', ja: '管理', zh: '管理', ko: '관리', ru: 'Управление' },
 }
 
 /** Get language name from code */

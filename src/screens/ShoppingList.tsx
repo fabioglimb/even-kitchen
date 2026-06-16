@@ -280,7 +280,7 @@ export function ShoppingList() {
         </div>
         <div className="h-1.5 bg-surface rounded-[6px] overflow-hidden">
           <div
-            className="h-full bg-positive rounded-[6px] transition-all duration-300"
+            className="h-full bg-accent rounded-[6px] transition-all duration-300"
             style={{ width: `${progressPercent}%` }}
           />
         </div>

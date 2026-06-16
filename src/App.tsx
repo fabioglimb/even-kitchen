@@ -9,6 +9,7 @@ import { CookingMode } from "./screens/CookingMode"
 import { Completion } from "./screens/Completion"
 import { Settings } from "./screens/Settings"
 import { ShoppingList } from "./screens/ShoppingList"
+import { Cookbooks } from "./screens/Cookbooks"
 import { KitchenGlasses } from "./glass/KitchenGlasses"
 import { Shell } from "./layouts/shell"
 
@@ -28,6 +29,7 @@ export function App() {
                 <Route path="/recipe/:id/cook" element={<CookingMode />} />
                 <Route path="/recipe/:id/complete" element={<Completion />} />
                 <Route path="/shopping" element={<ShoppingList />} />
+                <Route path="/cookbooks" element={<Cookbooks />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
             </Routes>

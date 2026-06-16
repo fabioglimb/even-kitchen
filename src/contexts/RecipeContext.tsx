@@ -40,6 +40,11 @@ type RecipeAction =
   | { type: 'SET_SETTINGS'; settings: AppSettings }
   | { type: 'TOGGLE_FAVORITE'; id: string }
   | { type: 'SET_SMART_VIEW'; config: SmartViewConfig }
+  | { type: 'ADD_COLLECTION'; collection: Collection }
+  | { type: 'UPDATE_COLLECTION'; collection: Collection }
+  | { type: 'DELETE_COLLECTION'; id: string }
+  | { type: 'ADD_RECIPE_TO_COLLECTION'; recipeId: string; collectionId: string }
+  | { type: 'REMOVE_RECIPE_FROM_COLLECTION'; recipeId: string; collectionId: string }
   | { type: 'INIT'; recipes: Recipe[]; collections: Collection[]; settings: AppSettings; favoriteIds: string[]; smartViewConfig: SmartViewConfig }
 
 // --- Context value ---
@@ -53,12 +58,20 @@ interface RecipeContextValue {
   collectionFilter: string
   favoriteIds: string[]
   smartViewConfig: SmartViewConfig
+  servingsOverrides: Record<string, number>
   loaded: boolean
   setSelectedRecipe: (recipe: Recipe | null) => void
   toggleFavorite: (id: string) => void
   setSmartViewConfig: (config: SmartViewConfig) => void
+  setServingsOverride: (recipeId: string, servings: number) => void
   setCategoryFilter: (category: string) => void
   setCollectionFilter: (collectionId: string) => void
+  addCollection: (collection: Collection) => void
+  updateCollection: (collection: Collection) => void
+  deleteCollection: (id: string) => void
+  addRecipeToCollection: (recipeId: string, collectionId: string) => void
+  removeRecipeFromCollection: (recipeId: string, collectionId: string) => void
+  getRecipeCollectionIds: (recipeId: string) => string[]
   addRecipe: (recipe: Recipe) => void
   updateRecipe: (recipe: Recipe) => void
   deleteRecipe: (id: string) => void
@@ -116,6 +129,16 @@ function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
       return { ...state, recipes: seedRecipes, collections: seedCollections, selectedRecipe: null, categoryFilter: 'All', collectionFilter: 'All' }
     case 'SET_SETTINGS':
       return { ...state, settings: action.settings }
+    case 'ADD_COLLECTION':
+      return { ...state, collections: [...state.collections, action.collection] }
+    case 'UPDATE_COLLECTION':
+      return { ...state, collections: state.collections.map((c) => c.id === action.collection.id ? action.collection : c) }
+    case 'DELETE_COLLECTION':
+      return { ...state, collections: state.collections.filter((c) => c.id !== action.id), collectionFilter: state.collectionFilter === action.id ? 'All' : state.collectionFilter }
+    case 'ADD_RECIPE_TO_COLLECTION':
+      return { ...state, collections: state.collections.map((c) => c.id === action.collectionId && !c.recipeIds.includes(action.recipeId) ? { ...c, recipeIds: [...c.recipeIds, action.recipeId] } : c) }
+    case 'REMOVE_RECIPE_FROM_COLLECTION':
+      return { ...state, collections: state.collections.map((c) => c.id === action.collectionId ? { ...c, recipeIds: c.recipeIds.filter((id) => id !== action.recipeId) } : c) }
     default:
       return state
   }
@@ -134,6 +157,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     smartViewConfig: DEFAULT_SMART_VIEW,
   })
   const [loaded, setLoaded] = useState(false)
+  const [servingsOverrides, setServingsOverrides] = useState<Record<string, number>>({})
 
   const persistRecipesNow = (recipes: Recipe[]) => {
     void saveRecipes(recipes)
@@ -192,6 +216,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     settings: state.settings,
     favoriteIds: state.favoriteIds,
     smartViewConfig: state.smartViewConfig,
+    servingsOverrides,
     categories,
     selectedRecipe: state.selectedRecipe,
     categoryFilter: state.categoryFilter,
@@ -201,6 +226,12 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     toggleFavorite: (id) => dispatch({ type: 'TOGGLE_FAVORITE', id }),
     setCategoryFilter: (category) => dispatch({ type: 'SET_CATEGORY_FILTER', category }),
     setCollectionFilter: (collectionId) => dispatch({ type: 'SET_COLLECTION_FILTER', collectionId }),
+    addCollection: (collection) => dispatch({ type: 'ADD_COLLECTION', collection }),
+    updateCollection: (collection) => dispatch({ type: 'UPDATE_COLLECTION', collection }),
+    deleteCollection: (id) => dispatch({ type: 'DELETE_COLLECTION', id }),
+    addRecipeToCollection: (recipeId, collectionId) => dispatch({ type: 'ADD_RECIPE_TO_COLLECTION', recipeId, collectionId }),
+    removeRecipeFromCollection: (recipeId, collectionId) => dispatch({ type: 'REMOVE_RECIPE_FROM_COLLECTION', recipeId, collectionId }),
+    getRecipeCollectionIds: (recipeId) => state.collections.filter((c) => c.recipeIds.includes(recipeId)).map((c) => c.id),
     addRecipe: (recipe) => {
       const next = [...state.recipes, recipe]
       dispatch({ type: 'ADD_RECIPE', recipe })
@@ -234,6 +265,9 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     },
     setSmartViewConfig: (config) => {
       dispatch({ type: 'SET_SMART_VIEW', config })
+    },
+    setServingsOverride: (recipeId, servings) => {
+      setServingsOverrides((prev) => ({ ...prev, [recipeId]: servings }))
     },
   }
 

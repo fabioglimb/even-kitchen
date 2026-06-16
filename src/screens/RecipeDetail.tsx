@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router"
 import { useRecipeContext } from "../contexts/RecipeContext"
 import { useCookingContext } from "../contexts/CookingContext"
 import { useShoppingContext } from "../contexts/ShoppingContext"
-import { Button, Badge, Card, SectionHeader, Divider, EmptyState, Toast } from "even-toolkit/web"
+import { Button, Badge, Card, SectionHeader, ConfirmDialog, EmptyState, Toast } from "even-toolkit/web"
 import { useDrawerHeader } from "even-toolkit/web"
 import { IcNavShopping } from "even-toolkit/web/icons/svg-icons"
 import { IngredientChip } from "../components/shared/IngredientChip"
@@ -15,16 +15,15 @@ import { useTranslation } from "../hooks/useTranslation"
 export function RecipeDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { recipes, setSelectedRecipe, deleteRecipe, toggleArchive } = useRecipeContext()
+  const { recipes, setSelectedRecipe, deleteRecipe, toggleArchive, servingsOverrides, setServingsOverride } = useRecipeContext()
   const { setCurrentStepIndex, resetAllTimers } = useCookingContext()
   const { addFromRecipe } = useShoppingContext()
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [servingsOverride, setServingsOverride] = useState<number | null>(null)
   const [shoppingAdded, setShoppingAdded] = useState(false)
   const { t } = useTranslation()
 
   const recipe = recipes.find((r) => r.id === id)
-  const currentServings = servingsOverride ?? recipe?.servings ?? 1
+  const currentServings = (id ? servingsOverrides[id] : undefined) ?? recipe?.servings ?? 1
   const scaledIngredients = useMemo(
     () => recipe ? scaleIngredients(recipe.ingredients, recipe.servings, currentServings) : [],
     [recipe, currentServings],
@@ -49,8 +48,6 @@ export function RecipeDetail() {
   }
 
   const handleAddToShopping = () => {
-    // Pass original (unscaled) ingredients + servings info — the shopping context stores
-    // base amounts and tracks the scale separately so users can rescale from the list.
     addFromRecipe(recipe.id, recipe.title, recipe.ingredients, recipe.servings, currentServings)
     setShoppingAdded(true)
     setTimeout(() => setShoppingAdded(false), 2000)
@@ -62,7 +59,7 @@ export function RecipeDetail() {
     <>
       {/* Hero */}
       {recipeImages.length > 0 ? (
-        <div className="h-48 bg-surface-light overflow-hidden">
+        <div className="h-48 bg-surface-light overflow-hidden flex items-center justify-center">
           <ZoomableImage
             images={recipeImages}
             alt={recipe.title}
@@ -89,14 +86,19 @@ export function RecipeDetail() {
           </div>
         </div>
 
+        {/* Start Cooking */}
+        <Button size="lg" className="w-full" onClick={handleStartCooking}>
+          {t('recipe.startCooking')}
+        </Button>
+
         {/* Servings Scaler */}
         <section>
           <SectionHeader title={t('recipe.scaleServings')} />
           <div className="flex items-center gap-3 bg-surface rounded-[6px] p-3">
             <Button
               size="icon"
-              variant="default"
-              onClick={() => setServingsOverride(Math.max(1, currentServings - 1))}
+              variant="highlight"
+              onClick={() => setServingsOverride(recipe.id, Math.max(1, currentServings - 1))}
               aria-label="Decrease servings"
             >
               <span className="text-[17px] tracking-[-0.17px] font-normal">−</span>
@@ -106,8 +108,8 @@ export function RecipeDetail() {
             </span>
             <Button
               size="icon"
-              variant="default"
-              onClick={() => setServingsOverride(currentServings + 1)}
+              variant="highlight"
+              onClick={() => setServingsOverride(recipe.id, currentServings + 1)}
               aria-label="Increase servings"
             >
               <span className="text-[17px] tracking-[-0.17px] font-normal">+</span>
@@ -123,14 +125,13 @@ export function RecipeDetail() {
               <IngredientChip key={ing.name} ingredient={ing} />
             ))}
           </div>
-          {/* Add to Shopping List */}
           <Button
-            variant="secondary"
+            variant="highlight"
             className="w-full mt-3"
             onClick={handleAddToShopping}
           >
             <IcNavShopping width={16} height={16} />
-            <span className="ml-1.5">{t('shopping.addFromRecipe')}</span>
+            {t('shopping.addFromRecipe')}
           </Button>
           {shoppingAdded && (
             <div className="mt-2">
@@ -157,58 +158,44 @@ export function RecipeDetail() {
           </div>
         </section>
 
-        {/* CTA */}
-        <div className="flex gap-3">
-          <Button size="lg" className="flex-1" onClick={handleStartCooking}>
-            {t('recipe.startCooking')}
-          </Button>
+        {/* Actions */}
+        <div className="space-y-3">
           <Button
-            size="lg"
             variant="default"
+            className="w-full"
             onClick={() => navigate(`/recipe/${recipe.id}/edit`)}
           >
             {t('recipe.edit')}
           </Button>
-        </div>
-
-        {/* Archive */}
-        <Button
-          variant="secondary"
-          className="w-full"
-          onClick={() => toggleArchive(recipe.id)}
-        >
-          {recipe.archived ? t('recipe.unarchive') : t('recipe.archive')}
-        </Button>
-
-        {/* Delete */}
-        <Divider variant="spaced" />
-        <div>
           <Button
-            variant={confirmDelete ? "danger" : "danger"}
+            variant="secondary"
             className="w-full"
-            onClick={() => {
-              if (!confirmDelete) {
-                setConfirmDelete(true)
-                return
-              }
-              deleteRecipe(recipe.id)
-              navigate("/")
-            }}
+            onClick={() => toggleArchive(recipe.id)}
           >
-            {confirmDelete ? t('recipe.confirmDelete') : t('recipe.delete')}
+            {recipe.archived ? t('recipe.unarchive') : t('recipe.archive')}
           </Button>
-          {confirmDelete && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full mt-2"
-              onClick={() => setConfirmDelete(false)}
-            >
-              {t('form.cancel')}
-            </Button>
-          )}
+          <Button
+            variant="danger"
+            className="w-full"
+            onClick={() => setConfirmDelete(true)}
+          >
+            {t('recipe.delete')}
+          </Button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        title={t('recipe.delete')}
+        description={t('recipe.confirmDelete')}
+        confirmLabel={t('recipe.delete')}
+        variant="danger"
+        onConfirm={() => {
+          deleteRecipe(recipe.id)
+          navigate("/")
+        }}
+      />
     </>
   )
 }
