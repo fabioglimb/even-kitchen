@@ -203,21 +203,21 @@ const translations: Record<string, Record<AppLanguage, string>> = {
   // Servings scaler
   'recipe.scaleServings': { en: 'Servings', it: 'Porzioni', es: 'Porciones', fr: 'Portions', de: 'Portionen', pt: 'Porções', ja: '人前', zh: '份量', ko: '인분', ru: 'Порции' },
 
-  // Smart View
-  'settings.smartView': { en: 'Smart View', it: 'Vista Smart', es: 'Vista Smart', fr: 'Vue Smart', de: 'Smart View', pt: 'Vista Smart', ja: 'スマートビュー', zh: '智能视图', ko: '스마트 뷰', ru: 'Умный вид' },
+  // Light View
+  'settings.smartView': { en: 'Light View', it: 'Vista Light', es: 'Vista Light', fr: 'Vue Light', de: 'Light View', pt: 'Vista Light', ja: 'ライトビュー', zh: '轻量视图', ko: '라이트 뷰', ru: 'Light-вид' },
   'settings.smartViewDesc': { en: 'Customize which info is shown during cooking steps on the glasses', it: 'Personalizza le info mostrate sui passaggi sugli occhiali', es: 'Personaliza la info mostrada durante los pasos en las gafas', fr: 'Personnaliser les infos affichées pendant la cuisson sur les lunettes', de: 'Anpassen, welche Infos beim Kochen auf der Brille angezeigt werden', pt: 'Personalizar quais infos são mostradas durante os passos nos óculos', ja: 'グラスで調理中に表示する情報をカスタマイズ', zh: '自定义眼镜烹饪步骤中显示的信息', ko: '안경에서 요리 단계 중 표시할 정보 사용자 지정', ru: 'Настройка информации, отображаемой на очках во время готовки' },
-  'settings.smartViewEnabled': { en: 'Enable Smart View', it: 'Abilita Vista Smart', es: 'Habilitar Vista Smart', fr: 'Activer Vue Smart', de: 'Smart View aktivieren', pt: 'Ativar Vista Smart', ja: 'スマートビューを有効にする', zh: '启用智能视图', ko: '스마트 뷰 활성화', ru: 'Включить умный вид' },
+  'settings.smartViewEnabled': { en: 'Enable Light View', it: 'Attiva Vista Light', es: 'Activar Vista Light', fr: 'Activer Vue Light', de: 'Light View aktivieren', pt: 'Ativar Vista Light', ja: 'ライトビューを有効にする', zh: '启用轻量视图', ko: '라이트 뷰 활성화', ru: 'Включить Light-вид' },
   'settings.defaultView': { en: 'Default View', it: 'Vista Predefinita', es: 'Vista Predeterminada', fr: 'Vue par Défaut', de: 'Standardansicht', pt: 'Vista Padrão', ja: 'デフォルトビュー', zh: '默认视图', ko: '기본 뷰', ru: 'Вид по умолчанию' },
   'settings.defaultViewDesc': { en: 'Which view mode to start with when cooking', it: 'Quale vista usare all\'inizio della cottura', es: 'Qué vista usar al empezar a cocinar', fr: 'Quel mode de vue utiliser au départ', de: 'Welche Ansicht beim Start des Kochens', pt: 'Qual vista usar ao iniciar o cozimento', ja: '調理開始時のビューモード', zh: '烹饪开始时的默认视图', ko: '요리 시작 시 기본 보기 모드', ru: 'Режим отображения при начале готовки' },
   'settings.viewFull': { en: 'Full', it: 'Completa', es: 'Completa', fr: 'Complète', de: 'Voll', pt: 'Completa', ja: 'フル', zh: '完整', ko: '전체', ru: 'Полный' },
-  'settings.viewSmart': { en: 'Smart', it: 'Smart', es: 'Smart', fr: 'Smart', de: 'Smart', pt: 'Smart', ja: 'スマート', zh: '智能', ko: '스마트', ru: 'Умный' },
+  'settings.viewSmart': { en: 'Light', it: 'Light', es: 'Light', fr: 'Light', de: 'Light', pt: 'Light', ja: 'ライト', zh: '轻量', ko: '라이트', ru: 'Light' },
   'settings.smartViewFields': { en: 'Visible Fields', it: 'Campi Visibili', es: 'Campos Visibles', fr: 'Champs Visibles', de: 'Sichtbare Felder', pt: 'Campos Visíveis', ja: '表示フィールド', zh: '可见字段', ko: '표시 필드', ru: 'Видимые поля' },
   'settings.field.instructions': { en: 'Step Instructions', it: 'Istruzioni Passaggio', es: 'Instrucciones del Paso', fr: 'Instructions de l\'Étape', de: 'Schrittanleitung', pt: 'Instruções do Passo', ja: 'ステップの手順', zh: '步骤说明', ko: '단계 설명', ru: 'Инструкции шага' },
   'settings.field.timer': { en: 'Timer', it: 'Timer', es: 'Temporizador', fr: 'Minuteur', de: 'Timer', pt: 'Temporizador', ja: 'タイマー', zh: '计时器', ko: '타이머', ru: 'Таймер' },
   'settings.field.nextStep': { en: 'Next Step Preview', it: 'Anteprima Prossimo Passaggio', es: 'Vista Previa Siguiente Paso', fr: 'Aperçu Étape Suivante', de: 'Vorschau Nächster Schritt', pt: 'Prévia Próximo Passo', ja: '次のステップのプレビュー', zh: '下一步预览', ko: '다음 단계 미리보기', ru: 'Предпросмотр следующего шага' },
   'settings.field.ingredients': { en: 'Ingredients', it: 'Ingredienti', es: 'Ingredientes', fr: 'Ingrédients', de: 'Zutaten', pt: 'Ingredientes', ja: '材料', zh: '食材', ko: '재료', ru: 'Ингредиенты' },
   'settings.field.servings': { en: 'Servings Count', it: 'Numero Porzioni', es: 'Número de Porciones', fr: 'Nombre de Portions', de: 'Portionenanzahl', pt: 'Número de Porções', ja: '人前数', zh: '份量数', ko: '인분 수', ru: 'Количество порций' },
-  'glass.smart': { en: 'Smart', it: 'Smart', es: 'Smart', fr: 'Smart', de: 'Smart', pt: 'Smart', ja: 'スマート', zh: '智能', ko: '스마트', ru: 'Умный' },
+  'glass.smart': { en: 'Light', it: 'Light', es: 'Light', fr: 'Light', de: 'Light', pt: 'Light', ja: 'ライト', zh: '轻量', ko: '라이트', ru: 'Light' },
   'glass.full': { en: 'Full', it: 'Completa', es: 'Completa', fr: 'Complète', de: 'Voll', pt: 'Completa', ja: 'フル', zh: '完整', ko: '전체', ru: 'Полный' },
 
   // Photos
