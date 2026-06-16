@@ -4,6 +4,7 @@ import { recipeListScreen } from './screens/recipe-list';
 import { recipeDetailScreen, buildRecipeDetailSplit } from './screens/recipe-detail';
 import { cookingScreen, buildCookingSplit } from './screens/cooking';
 import { completeScreen } from './screens/complete';
+import { shoppingScreen } from './screens/shopping';
 import type { GlassNavState, SplitData } from 'even-toolkit/types';
 
 export type { KitchenSnapshot, KitchenActions };
@@ -14,6 +15,7 @@ export const { toDisplayData, onGlassAction } = createGlassScreenRouter<KitchenS
   'recipe-detail': recipeDetailScreen,
   'cooking': cookingScreen,
   'complete': completeScreen,
+  'shopping': shoppingScreen,
 }, 'recipe-list');
 
 export function toSplitData(snapshot: KitchenSnapshot, nav: GlassNavState): SplitData {

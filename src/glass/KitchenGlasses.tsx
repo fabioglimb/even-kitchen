@@ -1,14 +1,17 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useGlasses } from 'even-toolkit/useGlasses';
 import { createScreenMapper, createIdExtractor } from 'even-toolkit/glass-router';
 import { useRecipeContext } from '../contexts/RecipeContext';
 import { useCookingContext } from '../contexts/CookingContext';
+import { useShoppingContext } from '../contexts/ShoppingContext';
 import { toDisplayData, toSplitData, onGlassAction, type KitchenSnapshot } from './selectors';
 import type { KitchenActions } from './shared';
+import { DEFAULT_SMART_VIEW } from '../types/recipe';
 
 const deriveScreen = createScreenMapper([
   { pattern: '/', screen: 'recipe-list' },
+  { pattern: '/shopping', screen: 'shopping' },
   { pattern: /^\/recipe\/[^/]+\/cook$/, screen: 'cooking' },
   { pattern: /^\/recipe\/[^/]+\/complete$/, screen: 'complete' },
   { pattern: /^\/recipe\/[^/]+$/, screen: 'recipe-detail' },
@@ -17,8 +20,12 @@ const deriveScreen = createScreenMapper([
 const extractRecipeId = createIdExtractor(/^\/recipe\/([^/]+)/);
 
 export function KitchenGlasses() {
-  const { recipes, settings, favoriteIds } = useRecipeContext();
+  const { recipes, collections, settings, favoriteIds, smartViewConfig } = useRecipeContext();
   const { currentStepIndex, setCurrentStepIndex, timers, getTimer, setStepTimer, resetAllTimers } = useCookingContext();
+  const { items: shoppingItems, recipeScales: shoppingScales, toggleItem: toggleShoppingItem } = useShoppingContext();
+  const [servingsOverrides, setServingsOverrides] = useState<Record<string, number>>({});
+  const [glassViewMode, setGlassViewMode] = useState<'full' | 'smart'>(smartViewConfig?.defaultMode ?? DEFAULT_SMART_VIEW.defaultMode);
+  const [pendingExit, setPendingExit] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -30,12 +37,19 @@ export function KitchenGlasses() {
 
   const snapshot: KitchenSnapshot = {
     recipes,
+    collections,
     currentRecipeId,
     currentStepIndex,
     timers,
     flashPhase: false,
     language: settings.language,
     favoriteIds,
+    shoppingItems,
+    shoppingScales,
+    servingsOverrides,
+    smartView: smartViewConfig ?? DEFAULT_SMART_VIEW,
+    glassViewMode,
+    pendingExit,
   };
   snapshotRef.current = snapshot;
 
@@ -66,6 +80,17 @@ export function KitchenGlasses() {
     }
   }, [getTimer, setStepTimer]);
 
+  const setServingsOverride = useCallback((recipeId: string, servings: number) => {
+    setServingsOverrides((prev) => ({ ...prev, [recipeId]: servings }));
+  }, []);
+
+  const toggleViewMode = useCallback(() => {
+    setGlassViewMode((prev) => (prev === 'full' ? 'smart' : 'full'));
+  }, []);
+
+  const requestExit = useCallback(() => setPendingExit(true), []);
+  const cancelExit = useCallback(() => setPendingExit(false), []);
+
   // Build context with side effects for screen action handlers
   const ctxRef = useRef<KitchenActions>({
     navigate,
@@ -73,7 +98,7 @@ export function KitchenGlasses() {
     toggleTimer,
     resetTimer: resetAllTimers,
   });
-  ctxRef.current = { navigate, setCurrentStepIndex, toggleTimer, resetTimer: resetAllTimers };
+  ctxRef.current = { navigate, setCurrentStepIndex, toggleTimer, resetTimer: resetAllTimers, toggleShoppingItem, setServingsOverride, toggleViewMode, requestExit, cancelExit };
 
   // Wrap the router's onGlassAction to inject context
   const handleGlassAction = useCallback(
@@ -91,7 +116,7 @@ export function KitchenGlasses() {
     appName: 'ER KITCHEN',
     headerClock: true,
     getPageMode: (screen) => {
-      if (screen === 'recipe-list') return 'home';
+      if (screen === 'recipe-list' || screen === 'shopping') return 'home';
       if (screen === 'recipe-detail' || screen === 'cooking') return 'split';
       return 'text';
     },

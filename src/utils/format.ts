@@ -14,3 +14,27 @@ export function formatMinutes(minutes: number): string {
   const m = minutes % 60
   return m > 0 ? `${h}h ${m}m` : `${h}h`
 }
+
+// --- Servings Scaler ---
+import type { Ingredient } from '../types/recipe'
+
+/**
+ * Scale ingredient amounts from `fromServings` to `toServings`.
+ * Handles numeric amounts (integers, decimals) and preserves non-numeric amounts as-is.
+ */
+export function scaleIngredients(
+  ingredients: Ingredient[],
+  fromServings: number,
+  toServings: number,
+): Ingredient[] {
+  if (fromServings <= 0 || toServings <= 0 || fromServings === toServings) return ingredients
+  const ratio = toServings / fromServings
+  return ingredients.map((ing) => {
+    const parsed = parseFloat(ing.amount)
+    if (isNaN(parsed)) return ing
+    const scaled = parsed * ratio
+    // Format nicely: no unnecessary decimals
+    const formatted = scaled % 1 === 0 ? String(scaled) : scaled.toFixed(1).replace(/\.0$/, '')
+    return { ...ing, amount: formatted }
+  })
+}

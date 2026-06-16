@@ -1,9 +1,11 @@
+import { useState } from "react"
 import { useParams, useNavigate } from "react-router"
 import { useRecipeContext } from "../contexts/RecipeContext"
 import { useCookingContext } from "../contexts/CookingContext"
 import { useTimer } from "../hooks/useTimer"
 import { useCookingProgress } from "../hooks/useCookingProgress"
-import { Button, Progress, TimerRing, StepIndicator, EmptyState, useDrawerHeader } from "even-toolkit/web"
+import { Button, Progress, TimerRing, StepIndicator, EmptyState, ConfirmDialog, useDrawerHeader } from "even-toolkit/web"
+import { IcChevronBack } from "even-toolkit/web/icons/svg-icons"
 import { useTranslation } from "../hooks/useTranslation"
 
 export function CookingMode() {
@@ -15,6 +17,7 @@ export function CookingMode() {
   const timer = useTimer()
   const { progress, isLastStep, currentStep, totalSteps } = useCookingProgress(recipe)
   const { t } = useTranslation()
+  const [confirmExit, setConfirmExit] = useState(false)
 
   const handlePrev = () => {
     if (currentStepIndex > 0) {
@@ -30,9 +33,23 @@ export function CookingMode() {
     }
   }
 
+  const handleQuit = () => {
+    setConfirmExit(false)
+    navigate(recipe ? `/recipe/${recipe.id}` : '/')
+  }
+
   useDrawerHeader({
     title: recipe?.title ?? t('cooking.title'),
-    backTo: recipe ? `/recipe/${recipe.id}` : '/',
+    left: (
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setConfirmExit(true)}
+        aria-label={t('cooking.exitConfirm')}
+      >
+        <IcChevronBack width={20} height={20} />
+      </Button>
+    ),
     below: (
       <div className="px-3 mt-3 pb-2">
         <Progress value={progress} />
@@ -108,6 +125,17 @@ export function CookingMode() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmExit}
+        onClose={() => setConfirmExit(false)}
+        onConfirm={handleQuit}
+        title={t('cooking.exitTitle')}
+        description={t('cooking.exitDesc')}
+        confirmLabel={t('cooking.exitConfirm')}
+        cancelLabel={t('cooking.keepCooking')}
+        variant="danger"
+      />
     </div>
   )
 }

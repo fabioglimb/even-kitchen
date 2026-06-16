@@ -1,16 +1,24 @@
-import type { Recipe, AppLanguage } from '../types/recipe';
+import type { Recipe, AppLanguage, ShoppingItem, Collection, SmartViewConfig } from '../types/recipe';
 import type { TimerState } from '../contexts/CookingContext';
+import type { RecipeScale } from '../contexts/ShoppingContext';
 import { truncate } from 'even-toolkit/text-utils';
 import { glassHeader, renderTextPageLines } from 'even-toolkit/types';
 
 export interface KitchenSnapshot {
   recipes: Recipe[];
+  collections: Collection[];
   currentRecipeId: string | null;
   currentStepIndex: number;
   timers: Record<number, TimerState>;
   flashPhase: boolean;
   language: AppLanguage;
   favoriteIds: string[];
+  shoppingItems: ShoppingItem[];
+  shoppingScales: Record<string, RecipeScale>;
+  servingsOverrides: Record<string, number>;
+  smartView: SmartViewConfig;
+  glassViewMode: 'full' | 'smart';
+  pendingExit: boolean;
 }
 
 export interface KitchenActions {
@@ -18,6 +26,11 @@ export interface KitchenActions {
   setCurrentStepIndex: (index: number) => void;
   toggleTimer: () => void;
   resetTimer: () => void;
+  toggleShoppingItem?: (id: string) => void;
+  setServingsOverride?: (recipeId: string, servings: number) => void;
+  toggleViewMode?: () => void;
+  requestExit?: () => void;
+  cancelExit?: () => void;
 }
 
 export function findRecipe(snapshot: KitchenSnapshot): Recipe | null {

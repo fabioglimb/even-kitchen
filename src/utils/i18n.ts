@@ -21,6 +21,11 @@ const translations: Record<string, Record<AppLanguage, string>> = {
   'cooking.step': { en: 'Step', it: 'Passaggio', es: 'Paso', fr: 'Etape', de: 'Schritt', pt: 'Passo', ja: 'ステップ', zh: '步骤', ko: '단계', ru: 'Шаг' },
   'cooking.of': { en: 'of', it: 'di', es: 'de', fr: 'de', de: 'von', pt: 'de', ja: '/', zh: '/', ko: '/', ru: 'из' },
   'cooking.exit': { en: 'Exit', it: 'Esci', es: 'Salir', fr: 'Quitter', de: 'Beenden', pt: 'Sair', ja: '終了', zh: '退出', ko: '나가기', ru: 'Выход' },
+  'cooking.exitTitle': { en: 'Exit cooking?', it: 'Uscire dalla cottura?', es: '¿Salir de la cocción?', fr: 'Quitter la cuisson ?', de: 'Kochen beenden?', pt: 'Sair do cozimento?', ja: '調理を終了？', zh: '退出烹饪？', ko: '요리를 종료할까요?', ru: 'Выйти из готовки?' },
+  'cooking.exitDesc': { en: 'Your progress will be lost', it: 'I progressi andranno persi', es: 'Se perderá el progreso', fr: 'Votre progression sera perdue', de: 'Fortschritt geht verloren', pt: 'O progresso será perdido', ja: '進捗は失われます', zh: '进度将丢失', ko: '진행 상황이 사라집니다', ru: 'Прогресс будет потерян' },
+  'cooking.exitConfirm': { en: 'Exit', it: 'Esci', es: 'Salir', fr: 'Quitter', de: 'Beenden', pt: 'Sair', ja: '終了', zh: '退出', ko: '종료', ru: 'Выйти' },
+  'cooking.keepCooking': { en: 'Keep cooking', it: 'Continua', es: 'Continuar', fr: 'Continuer', de: 'Weitermachen', pt: 'Continuar', ja: '続ける', zh: '继续', ko: '계속하기', ru: 'Продолжить' },
+  'glass.cancel': { en: 'Cancel', it: 'Annulla', es: 'Cancelar', fr: 'Annuler', de: 'Abbrechen', pt: 'Cancelar', ja: 'キャンセル', zh: '取消', ko: '취소', ru: 'Отмена' },
   'cooking.startTimer': { en: 'Start Timer', it: 'Avvia Timer', es: 'Iniciar Temporizador', fr: 'Demarrer', de: 'Timer starten', pt: 'Iniciar Timer', ja: 'タイマー開始', zh: '开始计时', ko: '타이머 시작', ru: 'Запустить таймер' },
   'cooking.pause': { en: 'Pause', it: 'Pausa', es: 'Pausar', fr: 'Pause', de: 'Pause', pt: 'Pausar', ja: '一時停止', zh: '暂停', ko: '일시정지', ru: 'Пауза' },
   'cooking.resume': { en: 'Resume', it: 'Riprendi', es: 'Reanudar', fr: 'Reprendre', de: 'Fortsetzen', pt: 'Retomar', ja: '再開', zh: '继续', ko: '계속', ru: 'Продолжить' },
@@ -173,6 +178,53 @@ const translations: Record<string, Record<AppLanguage, string>> = {
   'glass.finish': { en: 'Finish', it: 'Fine', es: 'Finalizar', fr: 'Terminer', de: 'Fertig', pt: 'Finalizar', ja: '完了', zh: '完成', ko: '완료', ru: 'Завершить' },
   'glass.recipes': { en: 'Recipes', it: 'Ricette', es: 'Recetas', fr: 'Recettes', de: 'Rezepte', pt: 'Receitas', ja: 'レシピ', zh: '食谱', ko: '레시피', ru: 'Рецепты' },
   'glass.servings': { en: 'servings prepared with care.', it: 'porzioni preparate con cura.', es: 'porciones preparadas con cuidado.', fr: 'portions preparees avec soin.', de: 'Portionen mit Sorgfalt zubereitet.', pt: 'porcoes preparadas com cuidado.', ja: '人前、心を込めて調理しました。', zh: '份，精心烹制。', ko: '인분, 정성껏 준비했습니다.', ru: 'порций приготовлено с заботой.' },
+
+  // Shopping List
+  'shopping.title': { en: 'Shopping List', it: 'Lista della Spesa', es: 'Lista de Compras', fr: 'Liste de Courses', de: 'Einkaufsliste', pt: 'Lista de Compras', ja: '買い物リスト', zh: '购物清单', ko: '쇼핑 목록', ru: 'Список покупок' },
+  'shopping.empty': { en: 'Shopping list is empty', it: 'La lista della spesa è vuota', es: 'La lista está vacía', fr: 'La liste est vide', de: 'Einkaufsliste ist leer', pt: 'A lista está vazia', ja: '買い物リストは空です', zh: '购物清单为空', ko: '쇼핑 목록이 비어 있습니다', ru: 'Список покупок пуст' },
+  'shopping.addFromRecipe': { en: 'Add to Shopping List', it: 'Aggiungi alla Lista', es: 'Añadir a la Lista', fr: 'Ajouter à la Liste', de: 'Zur Einkaufsliste', pt: 'Adicionar à Lista', ja: '買い物リストに追加', zh: '添加到购物清单', ko: '쇼핑 목록에 추가', ru: 'Добавить в список' },
+  'shopping.clearChecked': { en: 'Clear Checked', it: 'Rimuovi Spuntati', es: 'Borrar Marcados', fr: 'Effacer Coches', de: 'Erledigte loschen', pt: 'Limpar Marcados', ja: 'チェック済みを削除', zh: '清除已选', ko: '체크된 항목 삭제', ru: 'Удалить отмеченные' },
+  'shopping.clearAll': { en: 'Clear All', it: 'Svuota Tutto', es: 'Borrar Todo', fr: 'Tout Effacer', de: 'Alles loschen', pt: 'Limpar Tudo', ja: '全削除', zh: '全部清除', ko: '모두 삭제', ru: 'Очистить все' },
+  'shopping.progress': { en: '{checked} of {total}', it: '{checked} di {total}', es: '{checked} de {total}', fr: '{checked} sur {total}', de: '{checked} von {total}', pt: '{checked} de {total}', ja: '{checked} / {total}', zh: '{checked} / {total}', ko: '{checked} / {total}', ru: '{checked} из {total}' },
+  'shopping.added': { en: 'Added to shopping list!', it: 'Aggiunto alla lista!', es: 'Añadido a la lista!', fr: 'Ajouté à la liste!', de: 'Zur Liste hinzugefugt!', pt: 'Adicionado à lista!', ja: 'リストに追加しました!', zh: '已添加到清单!', ko: '목록에 추가됨!', ru: 'Добавлено в список!' },
+  'shopping.otherItems': { en: 'Other Items', it: 'Altri Articoli', es: 'Otros Artículos', fr: 'Autres Articles', de: 'Sonstige Artikel', pt: 'Outros Itens', ja: 'その他', zh: '其他', ko: '기타', ru: 'Другие товары' },
+  'shopping.allChecked': { en: 'All done!', it: 'Tutto fatto!', es: '¡Todo listo!', fr: 'Tout est fait !', de: 'Alles erledigt!', pt: 'Tudo pronto!', ja: '全部完了！', zh: '全部完成！', ko: '모두 완료!', ru: 'Всё готово!' },
+  'shopping.addItem': { en: 'Add Item', it: 'Aggiungi', es: 'Añadir', fr: 'Ajouter', de: 'Hinzufügen', pt: 'Adicionar', ja: '追加', zh: '添加', ko: '추가', ru: 'Добавить' },
+  'shopping.itemName': { en: 'Item name…', it: 'Nome articolo…', es: 'Nombre del artículo…', fr: 'Nom de l\'article…', de: 'Artikelname…', pt: 'Nome do item…', ja: '品名…', zh: '品名…', ko: '품명…', ru: 'Название…' },
+  'shopping.qty': { en: 'Qty', it: 'Qtà', es: 'Cant', fr: 'Qté', de: 'Menge', pt: 'Qtd', ja: '量', zh: '数量', ko: '양', ru: 'Кол.' },
+  'shopping.unit': { en: 'Unit', it: 'Unità', es: 'Unidad', fr: 'Unité', de: 'Einheit', pt: 'Unidade', ja: '単位', zh: '单位', ko: '단위', ru: 'Ед.' },
+  'shopping.servings': { en: '{count} servings', it: '{count} porzioni', es: '{count} porciones', fr: '{count} portions', de: '{count} Portionen', pt: '{count} porções', ja: '{count}人前', zh: '{count}份', ko: '{count}인분', ru: '{count} порций' },
+
+  // Collections
+  'collection.all': { en: 'All Recipes', it: 'Tutte le Ricette', es: 'Todas las Recetas', fr: 'Toutes les Recettes', de: 'Alle Rezepte', pt: 'Todas as Receitas', ja: '全レシピ', zh: '所有食谱', ko: '전체 레시피', ru: 'Все рецепты' },
+  'collection.cucinaItaliana': { en: 'Cucina Italiana', it: 'Cucina Italiana', es: 'Cucina Italiana', fr: 'Cucina Italiana', de: 'Cucina Italiana', pt: 'Cucina Italiana', ja: 'Cucina Italiana', zh: 'Cucina Italiana', ko: 'Cucina Italiana', ru: 'Cucina Italiana' },
+
+  // Servings scaler
+  'recipe.scaleServings': { en: 'Servings', it: 'Porzioni', es: 'Porciones', fr: 'Portions', de: 'Portionen', pt: 'Porções', ja: '人前', zh: '份量', ko: '인분', ru: 'Порции' },
+
+  // Smart View
+  'settings.smartView': { en: 'Smart View', it: 'Vista Smart', es: 'Vista Smart', fr: 'Vue Smart', de: 'Smart View', pt: 'Vista Smart', ja: 'スマートビュー', zh: '智能视图', ko: '스마트 뷰', ru: 'Умный вид' },
+  'settings.smartViewDesc': { en: 'Customize which info is shown during cooking steps on the glasses', it: 'Personalizza le info mostrate sui passaggi sugli occhiali', es: 'Personaliza la info mostrada durante los pasos en las gafas', fr: 'Personnaliser les infos affichées pendant la cuisson sur les lunettes', de: 'Anpassen, welche Infos beim Kochen auf der Brille angezeigt werden', pt: 'Personalizar quais infos são mostradas durante os passos nos óculos', ja: 'グラスで調理中に表示する情報をカスタマイズ', zh: '自定义眼镜烹饪步骤中显示的信息', ko: '안경에서 요리 단계 중 표시할 정보 사용자 지정', ru: 'Настройка информации, отображаемой на очках во время готовки' },
+  'settings.smartViewEnabled': { en: 'Enable Smart View', it: 'Abilita Vista Smart', es: 'Habilitar Vista Smart', fr: 'Activer Vue Smart', de: 'Smart View aktivieren', pt: 'Ativar Vista Smart', ja: 'スマートビューを有効にする', zh: '启用智能视图', ko: '스마트 뷰 활성화', ru: 'Включить умный вид' },
+  'settings.defaultView': { en: 'Default View', it: 'Vista Predefinita', es: 'Vista Predeterminada', fr: 'Vue par Défaut', de: 'Standardansicht', pt: 'Vista Padrão', ja: 'デフォルトビュー', zh: '默认视图', ko: '기본 뷰', ru: 'Вид по умолчанию' },
+  'settings.defaultViewDesc': { en: 'Which view mode to start with when cooking', it: 'Quale vista usare all\'inizio della cottura', es: 'Qué vista usar al empezar a cocinar', fr: 'Quel mode de vue utiliser au départ', de: 'Welche Ansicht beim Start des Kochens', pt: 'Qual vista usar ao iniciar o cozimento', ja: '調理開始時のビューモード', zh: '烹饪开始时的默认视图', ko: '요리 시작 시 기본 보기 모드', ru: 'Режим отображения при начале готовки' },
+  'settings.viewFull': { en: 'Full', it: 'Completa', es: 'Completa', fr: 'Complète', de: 'Voll', pt: 'Completa', ja: 'フル', zh: '完整', ko: '전체', ru: 'Полный' },
+  'settings.viewSmart': { en: 'Smart', it: 'Smart', es: 'Smart', fr: 'Smart', de: 'Smart', pt: 'Smart', ja: 'スマート', zh: '智能', ko: '스마트', ru: 'Умный' },
+  'settings.smartViewFields': { en: 'Visible Fields', it: 'Campi Visibili', es: 'Campos Visibles', fr: 'Champs Visibles', de: 'Sichtbare Felder', pt: 'Campos Visíveis', ja: '表示フィールド', zh: '可见字段', ko: '표시 필드', ru: 'Видимые поля' },
+  'settings.field.instructions': { en: 'Step Instructions', it: 'Istruzioni Passaggio', es: 'Instrucciones del Paso', fr: 'Instructions de l\'Étape', de: 'Schrittanleitung', pt: 'Instruções do Passo', ja: 'ステップの手順', zh: '步骤说明', ko: '단계 설명', ru: 'Инструкции шага' },
+  'settings.field.timer': { en: 'Timer', it: 'Timer', es: 'Temporizador', fr: 'Minuteur', de: 'Timer', pt: 'Temporizador', ja: 'タイマー', zh: '计时器', ko: '타이머', ru: 'Таймер' },
+  'settings.field.nextStep': { en: 'Next Step Preview', it: 'Anteprima Prossimo Passaggio', es: 'Vista Previa Siguiente Paso', fr: 'Aperçu Étape Suivante', de: 'Vorschau Nächster Schritt', pt: 'Prévia Próximo Passo', ja: '次のステップのプレビュー', zh: '下一步预览', ko: '다음 단계 미리보기', ru: 'Предпросмотр следующего шага' },
+  'settings.field.ingredients': { en: 'Ingredients', it: 'Ingredienti', es: 'Ingredientes', fr: 'Ingrédients', de: 'Zutaten', pt: 'Ingredientes', ja: '材料', zh: '食材', ko: '재료', ru: 'Ингредиенты' },
+  'settings.field.servings': { en: 'Servings Count', it: 'Numero Porzioni', es: 'Número de Porciones', fr: 'Nombre de Portions', de: 'Portionenanzahl', pt: 'Número de Porções', ja: '人前数', zh: '份量数', ko: '인분 수', ru: 'Количество порций' },
+  'glass.smart': { en: 'Smart', it: 'Smart', es: 'Smart', fr: 'Smart', de: 'Smart', pt: 'Smart', ja: 'スマート', zh: '智能', ko: '스마트', ru: 'Умный' },
+  'glass.full': { en: 'Full', it: 'Completa', es: 'Completa', fr: 'Complète', de: 'Voll', pt: 'Completa', ja: 'フル', zh: '完整', ko: '전체', ru: 'Полный' },
+
+  // Photos
+  'form.photos': { en: 'Photos', it: 'Foto', es: 'Fotos', fr: 'Photos', de: 'Fotos', pt: 'Fotos', ja: '写真', zh: '照片', ko: '사진', ru: 'Фото' },
+  'form.addPhoto': { en: 'Add Photo', it: 'Aggiungi Foto', es: 'Añadir Foto', fr: 'Ajouter Photo', de: 'Foto hinzufügen', pt: 'Adicionar Foto', ja: '写真を追加', zh: '添加照片', ko: '사진 추가', ru: 'Добавить фото' },
+  'form.addAnotherPhoto': { en: 'Add Another', it: 'Aggiungi Altra', es: 'Añadir Otra', fr: 'Ajouter Autre', de: 'Weitere hinzufügen', pt: 'Adicionar Outra', ja: 'さらに追加', zh: '添加更多', ko: '추가', ru: 'Добавить ещё' },
+  'form.removePhoto': { en: 'Remove photo', it: 'Rimuovi foto', es: 'Eliminar foto', fr: 'Supprimer photo', de: 'Foto entfernen', pt: 'Remover foto', ja: '写真を削除', zh: '删除照片', ko: '사진 삭제', ru: 'Удалить фото' },
+  'recipe.photos': { en: 'Photos', it: 'Foto', es: 'Fotos', fr: 'Photos', de: 'Fotos', pt: 'Fotos', ja: '写真', zh: '照片', ko: '사진', ru: 'Фото' },
 }
 
 /** Get language name from code */

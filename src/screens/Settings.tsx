@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useRecipeContext } from "../contexts/RecipeContext"
-import { Button, Input, Select, SegmentedControl, Card, Toast, useDrawerHeader } from "even-toolkit/web"
-import { AI_PROVIDERS, APP_LANGUAGES, type AIProvider, type AppLanguage } from "../types/recipe"
+import { Button, Input, Select, SegmentedControl, Card, Toast, Toggle, Checkbox, useDrawerHeader } from "even-toolkit/web"
+import { AI_PROVIDERS, APP_LANGUAGES, ALL_SMART_VIEW_FIELDS, type AIProvider, type AppLanguage, type SmartViewField } from "../types/recipe"
 import { useTranslation } from "../hooks/useTranslation"
 import { useRecipeIO } from "../hooks/useRecipeIO"
 
@@ -26,8 +26,16 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+const FIELD_LABEL_KEYS: Record<SmartViewField, string> = {
+  instructions: 'settings.field.instructions',
+  timer: 'settings.field.timer',
+  nextStep: 'settings.field.nextStep',
+  ingredients: 'settings.field.ingredients',
+  servings: 'settings.field.servings',
+}
+
 export function Settings() {
-  const { settings, setSettings, resetToDefaults } = useRecipeContext()
+  const { settings, setSettings, resetToDefaults, smartViewConfig, setSmartViewConfig } = useRecipeContext()
 
   const { t } = useTranslation()
   const {
@@ -76,6 +84,13 @@ export function Settings() {
       setKeyError(true)
       setToast(t('settings.errKeyRequired'))
     }
+  }
+
+  const toggleField = (field: SmartViewField) => {
+    const fields = smartViewConfig.fields.includes(field)
+      ? smartViewConfig.fields.filter((f) => f !== field)
+      : [...smartViewConfig.fields, field]
+    setSmartViewConfig({ ...smartViewConfig, fields })
   }
 
   const handleReset = () => {
@@ -152,6 +167,45 @@ export function Settings() {
             className="w-[130px]"
           />
         </SettingRow>
+      </Card>
+
+      {/* Smart View */}
+      <SectionLabel>{t('settings.smartView')}</SectionLabel>
+      <Card className="mb-4">
+        <SettingRow label={t('settings.smartViewEnabled')} description={t('settings.smartViewDesc')}>
+          <Toggle
+            checked={smartViewConfig.enabled}
+            onChange={(checked) => setSmartViewConfig({ ...smartViewConfig, enabled: checked })}
+          />
+        </SettingRow>
+        {smartViewConfig.enabled && (
+          <>
+            <SettingRow label={t('settings.defaultView')} description={t('settings.defaultViewDesc')}>
+              <Select
+                options={[
+                  { value: 'full', label: t('settings.viewFull') },
+                  { value: 'smart', label: t('settings.viewSmart') },
+                ]}
+                value={smartViewConfig.defaultMode}
+                onValueChange={(v) => setSmartViewConfig({ ...smartViewConfig, defaultMode: v as 'full' | 'smart' })}
+                className="w-[110px]"
+              />
+            </SettingRow>
+            <div className="py-3 border-b border-border last:border-b-0">
+              <span className="text-[11px] tracking-[-0.11px] text-text-dim font-normal uppercase">{t('settings.smartViewFields')}</span>
+              <div className="mt-2 space-y-2">
+                {ALL_SMART_VIEW_FIELDS.map((field) => (
+                  <Checkbox
+                    key={field}
+                    checked={smartViewConfig.fields.includes(field)}
+                    onChange={() => toggleField(field)}
+                    label={t(FIELD_LABEL_KEYS[field])}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </Card>
 
       {/* Data */}

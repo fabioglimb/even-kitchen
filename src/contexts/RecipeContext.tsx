@@ -1,16 +1,20 @@
 import { createContext, useContext, useReducer, useEffect, useMemo, useState, type ReactNode } from 'react'
-import type { Recipe, AppSettings } from '../types/recipe'
+import type { Recipe, AppSettings, Collection, SmartViewConfig } from '../types/recipe'
+import { DEFAULT_SMART_VIEW } from '../types/recipe'
 import { loadRecipes, saveRecipes, loadSettings, decryptSettings, saveSettingsEncrypted } from '../data/persistence'
 import { storageGet, storageSet } from 'even-toolkit/storage'
-import { seedRecipes } from '../data/seed-recipes'
+import { seedRecipes, seedCollections } from '../data/seed-recipes'
 
 // --- State ---
 interface RecipeState {
   recipes: Recipe[]
+  collections: Collection[]
   settings: AppSettings
   selectedRecipe: Recipe | null
   categoryFilter: string
+  collectionFilter: string
   favoriteIds: string[]
+  smartViewConfig: SmartViewConfig
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -26,6 +30,7 @@ const DEFAULT_SETTINGS: AppSettings = {
 type RecipeAction =
   | { type: 'SET_SELECTED'; recipe: Recipe | null }
   | { type: 'SET_CATEGORY_FILTER'; category: string }
+  | { type: 'SET_COLLECTION_FILTER'; collectionId: string }
   | { type: 'ADD_RECIPE'; recipe: Recipe }
   | { type: 'UPDATE_RECIPE'; recipe: Recipe }
   | { type: 'DELETE_RECIPE'; id: string }
@@ -34,20 +39,26 @@ type RecipeAction =
   | { type: 'RESET_TO_DEFAULTS' }
   | { type: 'SET_SETTINGS'; settings: AppSettings }
   | { type: 'TOGGLE_FAVORITE'; id: string }
-  | { type: 'INIT'; recipes: Recipe[]; settings: AppSettings; favoriteIds: string[] }
+  | { type: 'SET_SMART_VIEW'; config: SmartViewConfig }
+  | { type: 'INIT'; recipes: Recipe[]; collections: Collection[]; settings: AppSettings; favoriteIds: string[]; smartViewConfig: SmartViewConfig }
 
 // --- Context value ---
 interface RecipeContextValue {
   recipes: Recipe[]
+  collections: Collection[]
   settings: AppSettings
   categories: string[]
   selectedRecipe: Recipe | null
   categoryFilter: string
+  collectionFilter: string
   favoriteIds: string[]
+  smartViewConfig: SmartViewConfig
   loaded: boolean
   setSelectedRecipe: (recipe: Recipe | null) => void
   toggleFavorite: (id: string) => void
+  setSmartViewConfig: (config: SmartViewConfig) => void
   setCategoryFilter: (category: string) => void
+  setCollectionFilter: (collectionId: string) => void
   addRecipe: (recipe: Recipe) => void
   updateRecipe: (recipe: Recipe) => void
   deleteRecipe: (id: string) => void
@@ -63,7 +74,9 @@ const RecipeContext = createContext<RecipeContextValue | null>(null)
 function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
   switch (action.type) {
     case 'INIT':
-      return { ...state, recipes: action.recipes, settings: action.settings, favoriteIds: action.favoriteIds }
+      return { ...state, recipes: action.recipes, collections: action.collections, settings: action.settings, favoriteIds: action.favoriteIds, smartViewConfig: action.smartViewConfig }
+    case 'SET_SMART_VIEW':
+      return { ...state, smartViewConfig: action.config }
     case 'TOGGLE_FAVORITE': {
       const isFav = state.favoriteIds.includes(action.id)
       return { ...state, favoriteIds: isFav ? state.favoriteIds.filter((f) => f !== action.id) : [...state.favoriteIds, action.id] }
@@ -72,6 +85,8 @@ function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
       return { ...state, selectedRecipe: action.recipe }
     case 'SET_CATEGORY_FILTER':
       return { ...state, categoryFilter: action.category }
+    case 'SET_COLLECTION_FILTER':
+      return { ...state, collectionFilter: action.collectionId }
     case 'ADD_RECIPE':
       return { ...state, recipes: [...state.recipes, action.recipe] }
     case 'UPDATE_RECIPE':
@@ -98,7 +113,7 @@ function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
       return { ...state, recipes: [...state.recipes, ...newRecipes] }
     }
     case 'RESET_TO_DEFAULTS':
-      return { ...state, recipes: seedRecipes, selectedRecipe: null, categoryFilter: 'All' }
+      return { ...state, recipes: seedRecipes, collections: seedCollections, selectedRecipe: null, categoryFilter: 'All', collectionFilter: 'All' }
     case 'SET_SETTINGS':
       return { ...state, settings: action.settings }
     default:
@@ -110,10 +125,13 @@ function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
 export function RecipeProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(recipeReducer, {
     recipes: seedRecipes,
+    collections: seedCollections,
     settings: DEFAULT_SETTINGS,
     selectedRecipe: null,
     categoryFilter: 'All',
+    collectionFilter: 'All',
     favoriteIds: [],
+    smartViewConfig: DEFAULT_SMART_VIEW,
   })
   const [loaded, setLoaded] = useState(false)
 
@@ -124,9 +142,15 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   // Load data async on mount
   useEffect(() => {
     async function init() {
-      const [recipes, rawSettings, favoriteIds] = await Promise.all([loadRecipes(), loadSettings(), storageGet<string[]>('kitchen-favorites', [])])
+      const [recipes, rawSettings, favoriteIds, collections, smartView] = await Promise.all([
+        loadRecipes(),
+        loadSettings(),
+        storageGet<string[]>('kitchen-favorites', []),
+        storageGet<Collection[]>('kitchen-collections', seedCollections),
+        storageGet<SmartViewConfig>('kitchen-smart-view', DEFAULT_SMART_VIEW),
+      ])
       const settings = await decryptSettings(rawSettings)
-      dispatch({ type: 'INIT', recipes, settings, favoriteIds: favoriteIds ?? [] })
+      dispatch({ type: 'INIT', recipes, collections: collections ?? seedCollections, settings, favoriteIds: favoriteIds ?? [], smartViewConfig: smartView ?? DEFAULT_SMART_VIEW })
       setLoaded(true)
     }
     init()
@@ -147,6 +171,16 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     storageSet('kitchen-favorites', state.favoriteIds)
   }, [state.favoriteIds, loaded])
 
+  useEffect(() => {
+    if (!loaded) return
+    storageSet('kitchen-collections', state.collections)
+  }, [state.collections, loaded])
+
+  useEffect(() => {
+    if (!loaded) return
+    storageSet('kitchen-smart-view', state.smartViewConfig)
+  }, [state.smartViewConfig, loaded])
+
   const categories = useMemo(
     () => ['All', ...Array.from(new Set(state.recipes.map((r) => r.category)))],
     [state.recipes],
@@ -154,15 +188,19 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
 
   const value: RecipeContextValue = {
     recipes: state.recipes,
+    collections: state.collections,
     settings: state.settings,
     favoriteIds: state.favoriteIds,
+    smartViewConfig: state.smartViewConfig,
     categories,
     selectedRecipe: state.selectedRecipe,
     categoryFilter: state.categoryFilter,
+    collectionFilter: state.collectionFilter,
     loaded,
     setSelectedRecipe: (recipe) => dispatch({ type: 'SET_SELECTED', recipe }),
     toggleFavorite: (id) => dispatch({ type: 'TOGGLE_FAVORITE', id }),
     setCategoryFilter: (category) => dispatch({ type: 'SET_CATEGORY_FILTER', category }),
+    setCollectionFilter: (collectionId) => dispatch({ type: 'SET_COLLECTION_FILTER', collectionId }),
     addRecipe: (recipe) => {
       const next = [...state.recipes, recipe]
       dispatch({ type: 'ADD_RECIPE', recipe })
@@ -193,6 +231,9 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     setSettings: (settings) => {
       dispatch({ type: 'SET_SETTINGS', settings })
       void saveSettingsEncrypted(settings)
+    },
+    setSmartViewConfig: (config) => {
+      dispatch({ type: 'SET_SMART_VIEW', config })
     },
   }
 

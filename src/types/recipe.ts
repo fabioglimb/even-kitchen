@@ -11,6 +11,7 @@ export interface Recipe {
   steps: Step[]
   heroEmoji: string
   accentColor: string
+  images?: string[]
   archived?: boolean
 }
 
@@ -85,3 +86,38 @@ export interface AppSettings {
   anthropicApiKey: string
   deepseekApiKey: string
 }
+
+// --- Collections ---
+export interface Collection {
+  id: string
+  name: string
+  emoji: string
+  recipeIds: string[]
+}
+
+// --- Shopping List ---
+export interface ShoppingItem {
+  id: string
+  name: string
+  amount: string
+  unit: string
+  checked: boolean
+  recipeId?: string
+}
+
+// --- Smart View (glasses cooking screen) ---
+export type SmartViewField = 'instructions' | 'timer' | 'nextStep' | 'ingredients' | 'servings'
+
+export interface SmartViewConfig {
+  enabled: boolean
+  defaultMode: 'full' | 'smart'
+  fields: SmartViewField[]
+}
+
+export const DEFAULT_SMART_VIEW: SmartViewConfig = {
+  enabled: false,
+  defaultMode: 'full',
+  fields: ['instructions', 'timer', 'nextStep'],
+}
+
+export const ALL_SMART_VIEW_FIELDS: SmartViewField[] = ['instructions', 'timer', 'nextStep', 'ingredients', 'servings']

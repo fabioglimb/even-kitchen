@@ -11,8 +11,8 @@ import { useTranslation } from "../hooks/useTranslation"
 
 export function RecipeLibrary() {
   const navigate = useNavigate()
-  const { categories, categoryFilter, setCategoryFilter, settings, deleteRecipe, favoriteIds, toggleFavorite } = useRecipeContext()
-  const recipes = useRecipes(categoryFilter)
+  const { categories, categoryFilter, setCategoryFilter, collections, collectionFilter, setCollectionFilter, settings, deleteRecipe, favoriteIds, toggleFavorite } = useRecipeContext()
+  const recipes = useRecipes(categoryFilter, collectionFilter)
   const [activeTab, setActiveTab] = useState<"library" | "ai-import">("library")
   const {
     fileInputRef,
@@ -99,7 +99,37 @@ export function RecipeLibrary() {
       )}
 
       {activeTab === "library" && (
-        <CategoryFilter categories={categories} selected={categoryFilter} onSelect={setCategoryFilter} />
+        <>
+          {/* Collection filter */}
+          {collections.length > 0 && (
+            <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1">
+              <button
+                onClick={() => setCollectionFilter('All')}
+                className={`shrink-0 rounded-[6px] px-3 py-1.5 text-[13px] tracking-[-0.13px] font-normal transition-colors cursor-pointer ${
+                  collectionFilter === 'All'
+                    ? 'bg-text text-surface'
+                    : 'bg-surface text-text-dim'
+                }`}
+              >
+                {t('collection.all')}
+              </button>
+              {collections.map((col) => (
+                <button
+                  key={col.id}
+                  onClick={() => setCollectionFilter(col.id)}
+                  className={`shrink-0 rounded-[6px] px-3 py-1.5 text-[13px] tracking-[-0.13px] font-normal transition-colors cursor-pointer ${
+                    collectionFilter === col.id
+                      ? 'bg-text text-surface'
+                      : 'bg-surface text-text-dim'
+                  }`}
+                >
+                  {col.emoji} {col.name}
+                </button>
+              ))}
+            </div>
+          )}
+          <CategoryFilter categories={categories} selected={categoryFilter} onSelect={setCategoryFilter} />
+        </>
       )}
 
       {activeTab === "library" ? (

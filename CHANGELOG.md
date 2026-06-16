@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.0.0 — Cucina Italiana & Market Mode
+
+Released: 2026-06-16
+
+### Added
+
+- **Recipe Collections**: group recipes into themed collections; ships with a built-in "Cucina Italiana" collection (Pizza Margherita, Ragu alla Napoletana, Spaghetti alle Vongole, Tiramisu + Cacio e Pepe)
+- **Servings Scaler**: adjust servings on any recipe and watch all ingredient quantities recalculate live
+- **Smart Shopping List (Market Mode)**: add ingredients from any recipe (with scaled quantities) to a hands-free shopping list, navigable on both web and G2 glasses with tap-to-check-off
+- **Glass: Shopping screen**: scroll through your shopping list on the G2, tap to check/uncheck items
+- **Collection filter**: filter the recipe library by collection on the home screen
+- Shopping List added to the side drawer navigation
+
+### Changed
+
+- version bumped to 1.0.0
+
+### Notes
+
+- existing recipe data, imports, and local storage remain fully compatible
+- shopping list data persists in localStorage / bridge storage
+
+---
+
 ## 0.1.7
 
 Released: 2026-04-03

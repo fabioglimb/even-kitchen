@@ -1,10 +1,11 @@
 import type { GlassScreen } from 'even-toolkit/glass-screen-router';
-import { moveHighlight } from 'even-toolkit/glass-nav';
+import { moveHighlight, clampIndex } from 'even-toolkit/glass-nav';
 import { buildScrollableContent } from 'even-toolkit/glass-display-builders';
-import { buildStaticActionBar } from 'even-toolkit/action-bar';
+import { buildActionBar } from 'even-toolkit/action-bar';
 import { truncate } from 'even-toolkit/text-utils';
+import { createModeEncoder } from 'even-toolkit/glass-mode';
 import type { SplitData } from 'even-toolkit/types';
-import type { Recipe, AppLanguage } from '../../types/recipe';
+import type { Recipe, Ingredient, AppLanguage } from '../../types/recipe';
 import type { KitchenSnapshot, KitchenActions } from '../shared';
 import {
   findRecipe,
@@ -14,22 +15,40 @@ import {
   SPLIT_PANE_LINES,
 } from '../shared';
 import { t } from '../../utils/i18n';
+import { scaleIngredients } from '../../utils/format';
 
 const DETAIL_LEFT_WIDTH = 32;
 const DETAIL_RIGHT_WIDTH = 24;
 const DETAIL_CONTENT_WIDTH = DETAIL_LEFT_WIDTH - 2;
 
-function ingredientLines(recipe: Recipe): string[] {
-  return recipe.ingredients.map((ing) => truncate(`• ${`${ing.amount} ${ing.unit} ${ing.name}`.trim()}`, 54));
+// Mode encoder: buttons (0-99), scroll (100-199), servings (200+)
+export const detailMode = createModeEncoder({
+  buttons: 0,
+  scroll: 100,
+  servings: 200,
+});
+
+function getScaledIngredients(recipe: Recipe, snapshot: KitchenSnapshot): Ingredient[] {
+  const override = snapshot.servingsOverrides[recipe.id];
+  if (!override || override === recipe.servings) return recipe.ingredients;
+  return scaleIngredients(recipe.ingredients, recipe.servings, override);
 }
 
-function recipeDetailLines(recipe: Recipe, lang: AppLanguage): string[] {
+function getCurrentServings(recipe: Recipe, snapshot: KitchenSnapshot): number {
+  return snapshot.servingsOverrides[recipe.id] ?? recipe.servings;
+}
+
+function ingredientLines(ingredients: Ingredient[]): string[] {
+  return ingredients.map((ing) => truncate(`• ${`${ing.amount} ${ing.unit} ${ing.name}`.trim()}`, 54));
+}
+
+function recipeDetailLines(recipe: Recipe, lang: AppLanguage, ingredients: Ingredient[], servings: number): string[] {
   const items: string[] = [];
   items.push(recipe.title);
-  items.push(`${recipe.difficulty}  ${recipe.prepTime + recipe.cookTime}min  ${recipe.servings} ${t('recipe.servings', lang)}`);
+  items.push(`${recipe.difficulty}  ${recipe.prepTime + recipe.cookTime}min  ${servings} ${t('recipe.servings', lang)}`);
   items.push('');
   items.push(t('recipe.ingredients', lang).toUpperCase());
-  recipe.ingredients.forEach((ing) => {
+  ingredients.forEach((ing) => {
     items.push(truncate(`• ${`${ing.amount} ${ing.unit} ${ing.name}`.trim()}`, 54));
   });
   items.push('');
@@ -43,8 +62,8 @@ function recipeDetailLines(recipe: Recipe, lang: AppLanguage): string[] {
   return items;
 }
 
-export function recipeDetailLineCount(recipe: Recipe): number {
-  const contentLength = ingredientLines(recipe).flatMap((line) => wordWrap(line, DETAIL_CONTENT_WIDTH)).length;
+export function recipeDetailLineCount(recipe: Recipe, ingredients: Ingredient[]): number {
+  const contentLength = ingredientLines(ingredients).flatMap((l) => wordWrap(l, DETAIL_CONTENT_WIDTH)).length;
   return Math.max(0, contentLength - SPLIT_PANE_LINES);
 }
 
@@ -55,15 +74,19 @@ function difficultySpades(difficulty: string): string {
   return `${difficulty} ♠♠`;
 }
 
-function recipeSummaryLines(recipe: Recipe, lang: AppLanguage): string[] {
+function recipeSummaryLines(recipe: Recipe, lang: AppLanguage, servings: number): string[] {
   const totalMinutes = recipe.prepTime + recipe.cookTime;
   return [
     `◆ ${difficultySpades(recipe.difficulty)}`,
     `◆ ${totalMinutes} min`,
-    `◆ ${recipe.servings} ${t('recipe.servings', lang)}`,
+    `◆ ${servings} ${t('recipe.servings', lang)}`,
     `◆ ${recipe.ingredients.length} ${t('recipe.ingredients', lang).toLowerCase()}`,
     `◆ ${recipe.steps.length} ${t('recipe.steps', lang).toLowerCase()}`,
   ];
+}
+
+function getDetailButtons(lang: AppLanguage): string[] {
+  return [t('glass.start', lang), t('recipe.scaleServings', lang), t('glass.scroll', lang)];
 }
 
 export function buildRecipeDetailSplit(snapshot: KitchenSnapshot, nav: { highlightedIndex: number }): SplitData {
@@ -72,13 +95,20 @@ export function buildRecipeDetailSplit(snapshot: KitchenSnapshot, nav: { highlig
     return { header: buildSplitHeader('Recipe'), panes: ['', ''] };
   }
 
+  const lang = snapshot.language;
+  const ingredients = getScaledIngredients(recipe, snapshot);
+  const servings = getCurrentServings(recipe, snapshot);
+  const mode = detailMode.getMode(nav.highlightedIndex);
+  const buttons = getDetailButtons(lang);
+  const selectedButtonIndex = mode === 'buttons' ? clampIndex(nav.highlightedIndex, buttons.length) : -1;
+  const activeLabel = mode === 'servings' ? `${servings}x` : mode === 'scroll' ? t('glass.scroll', lang) : null;
+
   return {
-    header: buildSplitHeader(recipe.title, buildStaticActionBar([t('glass.start', snapshot.language)], 0)),
+    header: buildSplitHeader(recipe.title, buildActionBar(buttons, selectedButtonIndex, activeLabel, false)),
     panes: [
-      buildPaneText(ingredientLines(recipe), DETAIL_LEFT_WIDTH, nav.highlightedIndex),
-      buildPaneText(recipeSummaryLines(recipe, snapshot.language), DETAIL_RIGHT_WIDTH, 0),
+      buildPaneText(ingredientLines(ingredients), DETAIL_LEFT_WIDTH, mode === 'scroll' ? detailMode.getOffset(nav.highlightedIndex) : 0),
+      buildPaneText(recipeSummaryLines(recipe, lang, servings), DETAIL_RIGHT_WIDTH, 0),
     ],
-    // Taller header fits the title + separator (2 lines) without a scroll bar.
     layout: { headerHeight: 72 },
   };
 }
@@ -87,33 +117,92 @@ export const recipeDetailScreen: GlassScreen<KitchenSnapshot, KitchenActions> = 
   display(snapshot, nav) {
     const recipe = findRecipe(snapshot);
     if (!recipe) return { lines: [] };
-    const all = recipeDetailLines(recipe, snapshot.language);
+    const lang = snapshot.language;
+    const ingredients = getScaledIngredients(recipe, snapshot);
+    const servings = getCurrentServings(recipe, snapshot);
+    const mode = detailMode.getMode(nav.highlightedIndex);
+    const buttons = getDetailButtons(lang);
+    const selectedButtonIndex = mode === 'buttons' ? clampIndex(nav.highlightedIndex, buttons.length) : -1;
+    const activeLabel = mode === 'servings' ? `${servings}x` : mode === 'scroll' ? t('glass.scroll', lang) : null;
+    const all = recipeDetailLines(recipe, lang, ingredients, servings);
     return buildScrollableContent({
       title: recipe.title,
-      actionBar: buildStaticActionBar([t('recipe.startCooking', snapshot.language)], 0),
+      actionBar: buildActionBar(buttons, selectedButtonIndex, activeLabel, false),
       contentLines: all.slice(1),
-      scrollPos: nav.highlightedIndex,
+      scrollPos: mode === 'scroll' ? detailMode.getOffset(nav.highlightedIndex) : 0,
     });
   },
 
   action(action, nav, snapshot, ctx) {
     const recipe = findRecipe(snapshot);
     if (!recipe) return nav;
-    const maxScroll = recipeDetailLineCount(recipe);
+    const lang = snapshot.language;
+    const mode = detailMode.getMode(nav.highlightedIndex);
+    const ingredients = getScaledIngredients(recipe, snapshot);
+    const buttons = getDetailButtons(lang);
+    const servings = getCurrentServings(recipe, snapshot);
 
-    if (action.type === 'HIGHLIGHT_MOVE') {
-      return { ...nav, highlightedIndex: moveHighlight(nav.highlightedIndex, action.direction, maxScroll) };
-    }
-    if (action.type === 'SELECT_HIGHLIGHTED') {
-      ctx.setCurrentStepIndex(0);
-      ctx.resetTimer();
-      ctx.navigate(`/recipe/${recipe.id}/cook`);
+    // === BUTTONS MODE ===
+    if (mode === 'buttons') {
+      if (action.type === 'HIGHLIGHT_MOVE') {
+        const btnIdx = clampIndex(nav.highlightedIndex, buttons.length);
+        return { ...nav, highlightedIndex: moveHighlight(btnIdx, action.direction, buttons.length - 1) };
+      }
+      if (action.type === 'SELECT_HIGHLIGHTED') {
+        const btnIdx = clampIndex(nav.highlightedIndex, buttons.length);
+        const selected = buttons[btnIdx];
+        if (selected === t('glass.start', lang)) {
+          ctx.setCurrentStepIndex(0);
+          ctx.resetTimer();
+          ctx.navigate(`/recipe/${recipe.id}/cook`);
+          return nav;
+        }
+        if (selected === t('recipe.scaleServings', lang)) {
+          return { ...nav, highlightedIndex: detailMode.encode('servings') };
+        }
+        if (selected === t('glass.scroll', lang)) {
+          return { ...nav, highlightedIndex: detailMode.encode('scroll') };
+        }
+        return nav;
+      }
+      if (action.type === 'GO_BACK') {
+        ctx.navigate('/');
+        return nav;
+      }
       return nav;
     }
-    if (action.type === 'GO_BACK') {
-      ctx.navigate('/');
+
+    // === SERVINGS MODE ===
+    if (mode === 'servings') {
+      if (action.type === 'HIGHLIGHT_MOVE') {
+        const newServings = action.direction === 'down'
+          ? Math.max(1, servings - 1)
+          : servings + 1;
+        ctx.setServingsOverride?.(recipe.id, newServings);
+        return nav;
+      }
+      if (action.type === 'SELECT_HIGHLIGHTED' || action.type === 'GO_BACK') {
+        // Return to buttons, highlight the servings button
+        const servIdx = buttons.indexOf(t('recipe.scaleServings', lang));
+        return { ...nav, highlightedIndex: servIdx >= 0 ? servIdx : 0 };
+      }
       return nav;
     }
+
+    // === SCROLL MODE ===
+    if (mode === 'scroll') {
+      if (action.type === 'HIGHLIGHT_MOVE') {
+        const offset = detailMode.getOffset(nav.highlightedIndex);
+        const maxOffset = recipeDetailLineCount(recipe, ingredients);
+        return { ...nav, highlightedIndex: detailMode.encode('scroll', moveHighlight(offset, action.direction, maxOffset)) };
+      }
+      if (action.type === 'SELECT_HIGHLIGHTED' || action.type === 'GO_BACK') {
+        const scrollIdx = buttons.indexOf(t('glass.scroll', lang));
+        return { ...nav, highlightedIndex: scrollIdx >= 0 ? scrollIdx : 0 };
+      }
+      return nav;
+    }
+
     return nav;
   },
 };

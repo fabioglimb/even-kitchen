@@ -9,8 +9,9 @@ import {
 import { useParams, useNavigate } from "react-router";
 import { useRecipeContext } from "../contexts/RecipeContext";
 import { BottomActionBar, Button, Card, Input, Select, Textarea, Toast, useDrawerHeader } from "even-toolkit/web";
-import { IcEditAdd, IcTrash } from "even-toolkit/web/icons/svg-icons";
+import { IcEditAdd, IcTrash, IcFeatCamera } from "even-toolkit/web/icons/svg-icons";
 import { generateId } from "../utils/format";
+import { fileToThumbnailDataUrl } from "../utils/image";
 import type { Recipe, Ingredient, Step } from "../types/recipe";
 import { useTranslation } from "../hooks/useTranslation";
 
@@ -176,6 +177,7 @@ export function RecipeForm() {
   const [accentColor, setAccentColor] = useState("#e6b44c");
   const [ingredients, setIngredients] = useState<Ingredient[]>([emptyIngredient()]);
   const [steps, setSteps] = useState<Step[]>([emptyStep()]);
+  const [images, setImages] = useState<string[]>([]);
 
   const [titleError, setTitleError] = useState(false);
   const [ingredientsError, setIngredientsError] = useState(false);
@@ -201,6 +203,7 @@ export function RecipeForm() {
       setAccentColor(existing.accentColor);
       setIngredients(existing.ingredients.length > 0 ? existing.ingredients : [emptyIngredient()]);
       setSteps(existing.steps.length > 0 ? existing.steps : [emptyStep()]);
+      setImages(existing.images ?? []);
       return;
     }
 
@@ -250,6 +253,7 @@ export function RecipeForm() {
       accentColor,
       ingredients: ingredients.filter((i) => i.name.trim()),
       steps: steps.filter((s) => s.title.trim() || s.instructions.trim()),
+      ...(images.length > 0 ? { images } : {}),
     };
 
     if (isEdit) {
@@ -383,6 +387,47 @@ export function RecipeForm() {
             ))}
           </div>
         </FieldRow>
+      </Card>
+
+      <SectionLabel>{t('form.photos')}</SectionLabel>
+      <Card className="mb-4" padding="none">
+        <div className="px-3 py-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {images.map((src, imgIdx) => (
+              <div key={imgIdx} className="relative">
+                <img src={src} alt="" className="w-12 h-12 object-cover rounded-[4px]" />
+                <button
+                  type="button"
+                  onClick={() => setImages((prev) => prev.filter((_, k) => k !== imgIdx))}
+                  aria-label={t('form.removePhoto')}
+                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-negative text-text-highlight flex items-center justify-center cursor-pointer"
+                >
+                  <IcTrash width={12} height={12} />
+                </button>
+              </div>
+            ))}
+            <label className="inline-flex items-center gap-2 px-3 h-9 rounded-[6px] bg-surface-light text-text text-[13px] tracking-[-0.13px] cursor-pointer hover:bg-surface-lighter">
+              <IcFeatCamera width={16} height={16} />
+              {images.length > 0 ? t('form.addAnotherPhoto') : t('form.addPhoto')}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    const dataUrl = await fileToThumbnailDataUrl(file);
+                    setImages((prev) => [...prev, dataUrl]);
+                  } catch {
+                    // Ignore unreadable images
+                  }
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          </div>
+        </div>
       </Card>
 
       <SectionLabel>{t('form.ingredients')}</SectionLabel>

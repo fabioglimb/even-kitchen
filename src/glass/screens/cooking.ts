@@ -2,15 +2,16 @@ import type { GlassScreen } from 'even-toolkit/glass-screen-router';
 import { line, glassHeader } from 'even-toolkit/types';
 import type { SplitData } from 'even-toolkit/types';
 import { renderTimerLines } from 'even-toolkit/timer-display';
-import { buildActionBar } from 'even-toolkit/action-bar';
+import { buildActionBar, buildStaticActionBar } from 'even-toolkit/action-bar';
 import { truncate, applyScrollIndicators } from 'even-toolkit/text-utils';
 import { G2_TEXT_LINES } from 'even-toolkit/glass-display-builders';
 import { createModeEncoder } from 'even-toolkit/glass-mode';
 import { moveHighlight, clampIndex } from 'even-toolkit/glass-nav';
-import type { Recipe } from '../../types/recipe';
+import type { Recipe, SmartViewConfig, Ingredient } from '../../types/recipe';
 import type { TimerState } from '../../contexts/CookingContext';
 import type { AppLanguage } from '../../types/recipe';
 import type { KitchenSnapshot, KitchenActions } from '../shared';
+import { scaleIngredients } from '../../utils/format';
 import {
   findRecipe,
   wordWrap,
@@ -31,11 +32,16 @@ export const cookMode = createModeEncoder({
   steps: 200,
 });
 
-function getCookingButtons(hasTimer: boolean, hasScrollableContent: boolean, isLastStep: boolean, lang: AppLanguage): string[] {
+function getExitButtons(lang: AppLanguage): string[] {
+  return [t('glass.cancel', lang), t('cooking.exitConfirm', lang)];
+}
+
+function getCookingButtons(hasTimer: boolean, hasScrollableContent: boolean, isLastStep: boolean, lang: AppLanguage, smartView?: SmartViewConfig, viewMode?: 'full' | 'smart'): string[] {
   const btns: string[] = [];
   if (hasTimer) btns.push(t('glass.timer', lang));
   if (hasScrollableContent) btns.push(t('glass.scroll', lang));
   btns.push(t('glass.steps', lang));
+  if (smartView?.enabled) btns.push(viewMode === 'smart' ? t('glass.full', lang) : t('glass.smart', lang));
   if (isLastStep) btns.push(t('glass.finish', lang));
   return btns;
 }
@@ -67,6 +73,79 @@ function buildInstructionLines(recipe: Recipe, stepIndex: number): string[] {
   const step = recipe.steps[stepIndex];
   if (!step?.instructions) return [];
   return wordWrap(step.instructions, COOK_LEFT_CONTENT_WIDTH);
+}
+
+function getScaledIngredients(recipe: Recipe, snapshot: KitchenSnapshot): Ingredient[] {
+  const override = snapshot.servingsOverrides[recipe.id];
+  if (!override || override === recipe.servings) return recipe.ingredients;
+  return scaleIngredients(recipe.ingredients, recipe.servings, override);
+}
+
+function getCurrentServings(recipe: Recipe, snapshot: KitchenSnapshot): number {
+  return snapshot.servingsOverrides[recipe.id] ?? recipe.servings;
+}
+
+function buildSmartLeftLines(recipe: Recipe, stepIndex: number, snapshot: KitchenSnapshot): string[] {
+  const sv = snapshot.smartView;
+  const isSmart = sv?.enabled && snapshot.glassViewMode === 'smart';
+  const fields = sv?.fields ?? [];
+  const lines: string[] = [];
+
+  // Instructions
+  if (!isSmart || fields.includes('instructions')) {
+    lines.push(...buildInstructionLines(recipe, stepIndex));
+  }
+
+  // Ingredients (new field — shown when enabled)
+  if (isSmart && fields.includes('ingredients')) {
+    const ingredients = getScaledIngredients(recipe, snapshot);
+    if (lines.length > 0) lines.push('');
+    lines.push(t('recipe.ingredients', snapshot.language).toUpperCase());
+    for (const ing of ingredients) {
+      lines.push(...wordWrap(`• ${`${ing.amount} ${ing.unit} ${ing.name}`.trim()}`, COOK_LEFT_CONTENT_WIDTH));
+    }
+  }
+
+  return lines;
+}
+
+function buildSmartRightLines(recipe: Recipe, stepIndex: number, timers: Record<number, TimerState>, snapshot: KitchenSnapshot): string[] {
+  const sv = snapshot.smartView;
+  const lang = snapshot.language;
+  const isSmart = sv?.enabled && snapshot.glassViewMode === 'smart';
+  const fields = sv?.fields ?? [];
+  const step = recipe.steps[stepIndex];
+  if (!step) return [];
+
+  const lines: string[] = [];
+
+  // Timer (show if field enabled or full mode)
+  if (step.timerSeconds && (!isSmart || fields.includes('timer'))) {
+    const timer = getStepTimer(step, timers, stepIndex);
+    lines.push(`◆ ${t('glass.timer', lang).toUpperCase()}`);
+    lines.push('');
+    lines.push(...renderTimerLines(timer, 10, COOK_RIGHT_WIDTH));
+    lines.push('');
+  }
+
+  // Servings (new field — shown when enabled in smart mode)
+  if (isSmart && fields.includes('servings')) {
+    const servings = getCurrentServings(recipe, snapshot);
+    lines.push(`◆ ${servings} ${t('recipe.servings', lang)}`);
+    lines.push('');
+  }
+
+  // Next step preview
+  const nextStep = recipe.steps[stepIndex + 1];
+  if (!isSmart || fields.includes('nextStep')) {
+    const nextLines = nextStep
+      ? wordWrap(nextStep.title || nextStep.instructions || t('glass.finish', lang), COOK_RIGHT_CONTENT_WIDTH)
+      : [];
+    lines.push(nextStep ? `▶ ${t('glass.next', lang).toUpperCase()}` : `▶ ${t('glass.finish', lang).toUpperCase()}`);
+    lines.push(...nextLines);
+  }
+
+  return lines;
 }
 
 function buildTimerPaneLines(recipe: Recipe, stepIndex: number, timers: Record<number, TimerState>, lang: AppLanguage): string[] {
@@ -106,24 +185,45 @@ export function buildCookingSplit(snapshot: KitchenSnapshot, nav: { highlightedI
     return { header: buildSplitHeader('Cooking'), panes: ['', ''] };
   }
   const { currentStepIndex, timers, flashPhase, language: lang } = snapshot;
+
+  // Exit confirmation
+  if (snapshot.pendingExit) {
+    const exitButtons = getExitButtons(lang);
+    const exitIdx = clampIndex(nav.highlightedIndex, exitButtons.length);
+    return {
+      header: buildSplitHeader(
+        t('cooking.exitTitle', lang),
+        buildActionBar(exitButtons, exitIdx, null, flashPhase),
+      ),
+      panes: [
+        buildPaneText([t('cooking.exitDesc', lang)], COOK_LEFT_WIDTH, 0),
+        buildPaneText([`◆ ${currentStepIndex + 1}/${recipe.steps.length}`, t('recipe.steps', lang)], COOK_RIGHT_WIDTH, 0),
+      ],
+      layout: { headerHeight: 72 },
+    };
+  }
+
   const step = recipe.steps[currentStepIndex];
   const isLastStep = currentStepIndex >= recipe.steps.length - 1;
   const hasTimer = Boolean(step?.timerSeconds);
-  const hasScrollableContent = cookingContentLineCount(recipe, currentStepIndex) > 0;
-  const buttons = getCookingButtons(hasTimer, hasScrollableContent, isLastStep, lang);
+  const sv = snapshot.smartView;
+  const vm = snapshot.glassViewMode;
+  const leftLines = sv?.enabled ? buildSmartLeftLines(recipe, currentStepIndex, snapshot) : buildInstructionLines(recipe, currentStepIndex);
+  const hasScrollableContent = Math.max(0, leftLines.length - SPLIT_PANE_LINES) > 0;
+  const buttons = getCookingButtons(hasTimer, hasScrollableContent, isLastStep, lang, sv, vm);
   const mode = cookMode.getMode(nav.highlightedIndex);
   const selectedButtonIndex = mode === 'buttons' ? clampIndex(nav.highlightedIndex, buttons.length) : -1;
+  const activeLabel = sv?.enabled ? (vm === 'smart' ? '◇' : mode === 'scroll' ? t('glass.scroll', lang) : mode === 'steps' ? t('glass.steps', lang) : null) : (mode === 'scroll' ? t('glass.scroll', lang) : mode === 'steps' ? t('glass.steps', lang) : null);
 
   return {
     header: buildSplitHeader(
       `${currentStepIndex + 1}/${recipe.steps.length} ${step?.title ?? ''}`,
-      buildActionBar(buttons, selectedButtonIndex, mode === 'scroll' ? t('glass.scroll', lang) : mode === 'steps' ? t('glass.steps', lang) : null, flashPhase),
+      buildActionBar(buttons, selectedButtonIndex, activeLabel, flashPhase),
     ),
     panes: [
-      buildPaneText(buildInstructionLines(recipe, currentStepIndex), COOK_LEFT_WIDTH, mode === 'scroll' ? cookMode.getOffset(nav.highlightedIndex) : 0),
-      buildPaneText(buildTimerPaneLines(recipe, currentStepIndex, timers, lang), COOK_RIGHT_WIDTH, 0),
+      buildPaneText(leftLines, COOK_LEFT_WIDTH, mode === 'scroll' ? cookMode.getOffset(nav.highlightedIndex) : 0),
+      buildPaneText(sv?.enabled ? buildSmartRightLines(recipe, currentStepIndex, timers, snapshot) : buildTimerPaneLines(recipe, currentStepIndex, timers, lang), COOK_RIGHT_WIDTH, 0),
     ],
-    // Taller header fits the title + separator (2 lines) without a scroll bar.
     layout: { headerHeight: 72 },
   };
 }
@@ -133,16 +233,33 @@ export const cookingScreen: GlassScreen<KitchenSnapshot, KitchenActions> = {
     const recipe = findRecipe(snapshot);
     if (!recipe) return { lines: [] };
     const { currentStepIndex, timers, flashPhase, language: lang } = snapshot;
+
+    // Exit confirmation
+    if (snapshot.pendingExit) {
+      const exitButtons = getExitButtons(lang);
+      const exitIdx = clampIndex(nav.highlightedIndex, exitButtons.length);
+      return {
+        lines: [
+          ...glassHeader(t('cooking.exitTitle', lang), buildActionBar(exitButtons, exitIdx, null, flashPhase)),
+          line(t('cooking.exitDesc', lang), 'normal'),
+        ],
+      };
+    }
+
     const mode = cookMode.getMode(nav.highlightedIndex);
     const step = recipe.steps[currentStepIndex];
     const hasTimer = Boolean(step?.timerSeconds);
     const isLastStep = currentStepIndex >= recipe.steps.length - 1;
+    const sv = snapshot.smartView;
+    const vm = snapshot.glassViewMode;
     const hasScrollableContent = cookingContentLineCount(recipe, currentStepIndex) > 0;
-    const buttons = getCookingButtons(hasTimer, hasScrollableContent, isLastStep, lang);
+    const buttons = getCookingButtons(hasTimer, hasScrollableContent, isLastStep, lang, sv, vm);
     const selectedButtonIndex = mode === 'buttons' ? clampIndex(nav.highlightedIndex, buttons.length) : -1;
 
     const stepLabel = `${currentStepIndex + 1}/${recipe.steps.length} ${truncate(step?.title ?? '', 24)}`;
-    const activeLabel = mode === 'scroll' ? t('glass.scroll', lang) : mode === 'steps' ? t('glass.steps', lang) : null;
+    const modeLabel = mode === 'scroll' ? t('glass.scroll', lang) : mode === 'steps' ? t('glass.steps', lang) : null;
+    const smartLabel = sv?.enabled ? (vm === 'smart' ? '◇' : null) : null;
+    const activeLabel = modeLabel ?? smartLabel;
     const actionBar = buildActionBar(buttons, selectedButtonIndex, activeLabel, flashPhase);
 
     const content = buildStepContent(recipe, currentStepIndex, timers);
@@ -172,13 +289,40 @@ export const cookingScreen: GlassScreen<KitchenSnapshot, KitchenActions> = {
   action(action, nav, snapshot, ctx) {
     const recipe = findRecipe(snapshot);
     if (!recipe) return nav;
+    const lang = snapshot.language;
+
+    // Exit confirmation mode
+    if (snapshot.pendingExit) {
+      const exitButtons = getExitButtons(lang);
+      if (action.type === 'HIGHLIGHT_MOVE') {
+        const idx = clampIndex(nav.highlightedIndex, exitButtons.length);
+        return { ...nav, highlightedIndex: moveHighlight(idx, action.direction, exitButtons.length - 1) };
+      }
+      if (action.type === 'SELECT_HIGHLIGHTED') {
+        const selected = exitButtons[clampIndex(nav.highlightedIndex, exitButtons.length)];
+        if (selected === t('cooking.exitConfirm', lang)) {
+          ctx.cancelExit?.();
+          ctx.navigate(`/recipe/${recipe.id}`);
+          return { ...nav, highlightedIndex: 0 };
+        }
+        ctx.cancelExit?.();
+        return { ...nav, highlightedIndex: 0 };
+      }
+      if (action.type === 'GO_BACK') {
+        ctx.cancelExit?.();
+        return { ...nav, highlightedIndex: 0 };
+      }
+      return nav;
+    }
+
     const mode = cookMode.getMode(nav.highlightedIndex);
     const step = recipe.steps[snapshot.currentStepIndex];
     const hasTimer = Boolean(step?.timerSeconds);
     const isLastStep = snapshot.currentStepIndex >= recipe.steps.length - 1;
-    const lang = snapshot.language;
+    const sv = snapshot.smartView;
+    const vm = snapshot.glassViewMode;
     const hasScrollableContent = cookingContentLineCount(recipe, snapshot.currentStepIndex) > 0;
-    const buttons = getCookingButtons(hasTimer, hasScrollableContent, isLastStep, lang);
+    const buttons = getCookingButtons(hasTimer, hasScrollableContent, isLastStep, lang, sv, vm);
 
     if (mode === 'buttons') {
       if (action.type === 'HIGHLIGHT_MOVE') {
@@ -191,10 +335,11 @@ export const cookingScreen: GlassScreen<KitchenSnapshot, KitchenActions> = {
         if (selected === t('glass.timer', lang)) { ctx.toggleTimer(); return nav; }
         if (selected === t('glass.scroll', lang)) return { ...nav, highlightedIndex: cookMode.encode('scroll') };
         if (selected === t('glass.steps', lang)) return { ...nav, highlightedIndex: cookMode.encode('steps') };
+        if (selected === t('glass.smart', lang) || selected === t('glass.full', lang)) { ctx.toggleViewMode?.(); return nav; }
         if (selected === t('glass.finish', lang)) { ctx.navigate(`/recipe/${recipe.id}/complete`); return nav; }
         return nav;
       }
-      if (action.type === 'GO_BACK') { ctx.navigate(`/recipe/${recipe.id}`); return nav; }
+      if (action.type === 'GO_BACK') { ctx.requestExit?.(); return { ...nav, highlightedIndex: 0 }; }
       return nav;
     }
 
