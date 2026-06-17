@@ -1,25 +1,41 @@
 import type { Recipe } from "../types/recipe"
 
-export function downloadJson(data: unknown, filename: string): Promise<"shared" | "copied"> {
-  const json = JSON.stringify(data, null, 2)
-  const blob = new Blob([json], { type: "application/json;charset=utf-8" })
-  const file = new File([blob], filename, { type: "application/json" })
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
 
+function shareOrDownloadBlob(blob: Blob, filename: string): Promise<"shared" | "downloaded"> {
   if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+    const file = new File([blob], filename, { type: blob.type || "application/octet-stream" })
     const canShareFiles =
       typeof navigator.canShare !== "function" || navigator.canShare({ files: [file] })
 
-    if (canShareFiles) {
-      return navigator.share({ title: filename, files: [file] })
-        .then(() => "shared" as const)
-        .catch((err) => {
-          if (err instanceof DOMException && err.name === "AbortError") throw err
-          return navigator.clipboard.writeText(json).then(() => "copied" as const)
-        })
-    }
+    const sharePromise = canShareFiles
+      ? navigator.share({ title: filename, files: [file] })
+      : navigator.share({ title: filename, text: `Exported: ${filename}` })
+
+    return sharePromise.then(() => "shared" as const).catch((err) => {
+      if (err instanceof DOMException && err.name === "AbortError") throw err
+      downloadBlob(blob, filename)
+      return "downloaded" as const
+    })
   }
 
-  return navigator.clipboard.writeText(json).then(() => "copied" as const)
+  downloadBlob(blob, filename)
+  return Promise.resolve("downloaded")
+}
+
+export function downloadJson(data: unknown, filename: string): Promise<{ action: "shared" | "downloaded" }> {
+  const text = JSON.stringify(data, null, 2)
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" })
+  return shareOrDownloadBlob(blob, filename).then((action) => ({ action }))
 }
 
 export function validateImportedRecipes(data: unknown): Recipe[] | null {
