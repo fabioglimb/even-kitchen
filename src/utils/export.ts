@@ -2,25 +2,14 @@ import type { Recipe } from "../types/recipe"
 
 export function downloadJson(data: unknown, filename: string): void {
   const json = JSON.stringify(data, null, 2)
-
-  if (navigator.share) {
-    const file = new File([json], filename, { type: "application/json" })
-    navigator.share({ files: [file] }).catch(() => {})
-    return
-  }
-
-  const blob = new Blob([json], { type: "application/json" })
-  const url = URL.createObjectURL(blob)
+  const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(json)
   const a = document.createElement("a")
-  a.href = url
+  a.href = dataUri
   a.download = filename
   a.style.display = "none"
   document.body.appendChild(a)
   a.click()
-  setTimeout(() => {
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }, 200)
+  setTimeout(() => document.body.removeChild(a), 100)
 }
 
 export function validateImportedRecipes(data: unknown): Recipe[] | null {
