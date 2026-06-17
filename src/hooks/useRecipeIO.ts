@@ -19,9 +19,8 @@ export function useRecipeIO() {
     return () => clearTimeout(timer);
   }, [statusMessage]);
 
-  const exportRecipes = () => {
+  const exportRecipes = () =>
     downloadJson(recipes, `even-kitchen-recipes-${Date.now()}.json`);
-  };
 
   const triggerImport = () => fileInputRef.current?.click();
 

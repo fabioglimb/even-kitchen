@@ -63,7 +63,11 @@ export function RecipeLibrary() {
           <ListItem
             title={t('settings.exportBtn')}
             leading={<IcShare width={18} height={18} />}
-            onPress={() => { exportRecipes(); setMoreOpen(false); }}
+            onPress={() => {
+              exportRecipes()
+                .then(() => setMoreOpen(false))
+                .catch(() => {});
+            }}
           />
           <ListItem
             title={t('settings.importBtn')}
