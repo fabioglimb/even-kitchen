@@ -4,7 +4,7 @@ import { useRecipeContext } from "../contexts/RecipeContext"
 import { useRecipes } from "../hooks/useRecipes"
 import { useRecipeIO } from "../hooks/useRecipeIO"
 import { RecipeCard } from "../components/shared/RecipeCard"
-import { CategoryFilter, Button, BottomSheet, ListItem, Toast, useDrawerHeader } from "even-toolkit/web"
+import { CategoryFilter, Button, BottomSheet, Toast, useDrawerHeader } from "even-toolkit/web"
 import { IcEditAdd, IcEditImport, IcShare, IcMore } from "even-toolkit/web/icons/svg-icons"
 import { AIImportTab } from "../components/shared/AIImportTab"
 import { useTranslation } from "../hooks/useTranslation"
@@ -59,21 +59,27 @@ export function RecipeLibrary() {
         className="hidden"
       />
       <BottomSheet open={moreOpen} onClose={() => setMoreOpen(false)}>
-        <div className="py-2">
-          <ListItem
-            title={t('settings.exportBtn')}
-            leading={<IcShare width={18} height={18} />}
-            onPress={() => {
+        <div className="py-2 flex flex-col">
+          <button
+            type="button"
+            className="flex items-center gap-3 px-4 py-3 text-[15px] tracking-[-0.15px] font-normal text-text cursor-pointer bg-transparent border-0 text-left"
+            onClick={() => {
               exportRecipes()
                 .then(() => setMoreOpen(false))
                 .catch(() => {});
             }}
-          />
-          <ListItem
-            title={t('settings.importBtn')}
-            leading={<IcEditImport width={18} height={18} />}
-            onPress={() => { triggerImport(); setMoreOpen(false); }}
-          />
+          >
+            <IcShare width={18} height={18} />
+            {t('settings.exportBtn')}
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-3 px-4 py-3 text-[15px] tracking-[-0.15px] font-normal text-text cursor-pointer bg-transparent border-0 text-left"
+            onClick={() => { triggerImport(); setMoreOpen(false); }}
+          >
+            <IcEditImport width={18} height={18} />
+            {t('settings.importBtn')}
+          </button>
         </div>
       </BottomSheet>
       {statusMessage && (
